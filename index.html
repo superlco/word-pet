@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>单词小宠物 - 快乐背单词</title>
+<title>单词宠物园 - 快乐背单词</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
 :root {
@@ -20,6 +20,34 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hi
 @keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
 @keyframes confetti { 0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(-80px) rotate(360deg);opacity:0} }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+@keyframes petEat { 0%,100%{transform:scale(1) rotate(0)} 25%{transform:scale(1.15) rotate(-6deg)} 50%{transform:scale(0.95) rotate(0)} 75%{transform:scale(1.12) rotate(6deg)} }
+@keyframes petJump { 0%,100%{transform:translateY(0) scale(1)} 30%{transform:translateY(-28px) scale(1.05)} 50%{transform:translateY(0) scale(0.95,1.05)} 65%{transform:translateY(-12px)} 80%{transform:translateY(0)} }
+@keyframes petSpin { 0%{transform:rotate(0) scale(1)} 50%{transform:rotate(180deg) scale(1.2)} 100%{transform:rotate(360deg) scale(1)} }
+@keyframes petWiggle { 0%,100%{transform:rotate(0)} 20%{transform:rotate(-8deg)} 40%{transform:rotate(8deg)} 60%{transform:rotate(-6deg)} 80%{transform:rotate(6deg)} }
+@keyframes petSleep { 0%,100%{transform:translateY(0) scale(1)} 50%{transform:translateY(2px) scale(1.02,0.98)} }
+@keyframes particleUp { 0%{transform:translateY(0) scale(0.6);opacity:0} 20%{opacity:1;transform:translateY(-14px) scale(1)} 100%{transform:translateY(-70px) scale(1.1);opacity:0} }
+@keyframes foodFly { 0%{transform:translate(70px,-60px) scale(0.5) rotate(0);opacity:0} 30%{opacity:1} 100%{transform:translate(0,0) scale(1) rotate(-30deg);opacity:0} }
+@keyframes zzz { 0%{transform:translateY(0);opacity:0} 30%{opacity:1} 100%{transform:translateY(-30px);opacity:0} }
+.pet-emoji.anim-eat { animation:petEat .7s ease 2; }
+.pet-emoji.anim-jump { animation:petJump .8s ease 2; }
+.pet-emoji.anim-spin { animation:petSpin .8s ease 1; }
+.pet-emoji.anim-wiggle { animation:petWiggle .6s ease 2; }
+.pet-emoji.anim-sleep { animation:petSleep 2.5s ease-in-out infinite; }
+.pet-particle { position:absolute; font-size:20px; animation:particleUp 1s ease forwards; pointer-events:none; }
+.pet-food { position:absolute; font-size:26px; animation:foodFly .7s ease forwards; pointer-events:none; }
+.speak-btn { border:none; background:#F0EDFF; color:var(--primary); width:38px; height:38px; border-radius:50%; font-size:18px; cursor:pointer; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; }
+.speak-btn:active { transform:scale(0.9); background:var(--primary); color:#fff; }
+.word-emoji { font-size:64px; line-height:1; margin-bottom:10px; animation:pop .4s ease; }
+.memorize-box { margin-top:14px; padding:14px; background:#F0FFF9; border:1.5px dashed #00B894; border-radius:14px; text-align:center; animation:pop .3s ease; }
+.spell-slots { display:flex; flex-wrap:wrap; gap:6px; justify-content:center; margin:16px 0; }
+.spell-slot { width:34px; height:42px; border:2px dashed #DFE6E9; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; font-weight:700; color:var(--primary); background:#FAFAFE; text-transform:lowercase; }
+.spell-slot.filled { border-style:solid; border-color:var(--primary-light); background:#F0EDFF; animation:pop .2s ease; }
+.spell-slot.ok { border-color:var(--success); background:#E8FFF8; color:var(--success); }
+.spell-slot.bad { border-color:var(--danger); background:#FFF0ED; color:var(--danger); animation:shake .3s; }
+.letter-bank { display:flex; flex-wrap:wrap; gap:8px; justify-content:center; margin-top:8px; }
+.letter-tile { width:40px; height:44px; border:2px solid #E8E6FF; border-bottom-width:4px; border-radius:12px; background:#fff; font-size:19px; font-weight:700; color:var(--primary); cursor:pointer; text-transform:lowercase; transition:all .1s; }
+.letter-tile:active { transform:translateY(2px); border-bottom-width:2px; }
+.letter-tile.used { opacity:0.15; pointer-events:none; }
 
 /* Header */
 .header { display:flex; align-items:center; justify-content:space-between; padding:8px 0 16px; }
@@ -189,7 +217,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hi
 <!-- Setup -->
 <div id="setupOverlay" class="setup-overlay" style="display:none">
   <div class="setup-card">
-    <h2>单词小宠物</h2>
+    <h2>单词宠物园</h2>
     <p>每天背几个单词，养一只可爱的小宠物吧！</p>
     <input id="setupName" class="setup-input" placeholder="输入你的名字" maxlength="8">
     <div class="grade-grid" id="gradeGrid"></div>
@@ -200,7 +228,7 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hi
 <!-- Home -->
 <div id="page-home" class="page active">
   <div class="header">
-    <h1>单词小宠物</h1>
+    <h1>单词宠物园</h1>
     <div class="points-badge">⭐ <span id="homePoints">0</span></div>
   </div>
   <div class="streak-bar">
@@ -282,14 +310,14 @@ body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hi
 
 <!-- Bottom Nav -->
 <nav class="bottom-nav">
-  <button class="nav-item active" onclick="switchPage('home')"><span class="nav-icon">🏠</span>首页</button>
-  <button class="nav-item" onclick="switchPage('learn')"><span class="nav-icon">📖</span>学习</button>
-  <button class="nav-item" onclick="switchPage('review')" id="navReview"><span class="nav-icon">🔄</span>复习<span class="nav-badge" id="reviewBadge" style="display:none">0</span></button>
-  <button class="nav-item" onclick="switchPage('test')"><span class="nav-icon">✏️</span>测试</button>
-  <button class="nav-item" onclick="switchPage('pet')"><span class="nav-icon">🐾</span>宠物</button>
-  <button class="nav-item" onclick="switchPage('book')"><span class="nav-icon">📚</span>词本</button>
-  <button class="nav-item" onclick="switchPage('grammar')"><span class="nav-icon">💡</span>语法</button>
-  <button class="nav-item" onclick="switchPage('settings')"><span class="nav-icon">⚙️</span>设置</button>
+  <button class="nav-item active" onclick="SFX.click();switchPage('home')"><span class="nav-icon">🏠</span>首页</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('learn')"><span class="nav-icon">📖</span>学习</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('review')" id="navReview"><span class="nav-icon">🔄</span>复习<span class="nav-badge" id="reviewBadge" style="display:none">0</span></button>
+  <button class="nav-item" onclick="SFX.click();switchPage('test')"><span class="nav-icon">✏️</span>测试</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('pet')"><span class="nav-icon">🐾</span>宠物</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('book')"><span class="nav-icon">📚</span>词本</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('grammar')"><span class="nav-icon">💡</span>语法</button>
+  <button class="nav-item" onclick="SFX.click();switchPage('settings')"><span class="nav-icon">⚙️</span>设置</button>
 </nav>
 
 <script>
@@ -396,6 +424,38 @@ g5: [["last week","上周"],["last year","去年"],["the day before yesterday","
 g6: [["grow up","长大"],["want to be","想成为"],["take care of","照顾"],["look after","照料"],["protect the environment","保护环境"],["save energy","节约能源"],["throw away","扔掉"],["pick up","捡起"],["plant trees","种树"],["make a plan","制定计划"],["work hard","努力学习"],["come true","实现"],["give advice","提建议"],["make progress","取得进步"],["pay attention to","注意"],["be good for","对...有益"],["be bad for","对...有害"],["instead of","而不是"],["no matter","无论"],["each other","互相"]]
 };
 
+// 形象记忆：具体名词配emoji，帮助图像化记忆
+const EMOJI_MAP = {
+"cat":"🐱","dog":"🐶","fish":"🐟","bird":"🐦","duck":"🦆","pig":"🐷","bear":"🐻","monkey":"🐵","panda":"🐼","rabbit":"🐰","elephant":"🐘","tiger":"🐯",
+"apple":"🍎","banana":"🍌","cake":"🎂","bread":"🍞","egg":"🥚","milk":"🥛","water":"💧","juice":"🧃","rice":"🍚","noodles":"🍜","chicken":"🍗","tea":"🍵","candy":"🍬","ice cream":"🍦","hamburger":"🍔","potato":"🥔","food":"🍽️","sweet":"🍬",
+"book":"📖","pen":"🖊️","pencil":"✏️","ruler":"📏","bag":"🎒","desk":"🪑","chair":"🪑","eraser":"🧽","crayon":"🖍️","pencil case":"🗃️",
+"ball":"⚽","doll":"🪆","kite":"🪁","car":"🚗","box":"📦","toy":"🧸","balloon":"🎈",
+"eye":"👁️","ear":"👂","nose":"👃","mouth":"👄","face":"😊","hand":"✋","head":"🗣️","arm":"💪","leg":"🦵","foot":"🦶",
+"sun":"☀️","moon":"🌙","star":"⭐",
+"red":"🔴","blue":"🔵","yellow":"🟡","green":"🟢","black":"⚫","white":"⚪","orange":"🟠","purple":"🟣","pink":"🌸","brown":"🟤",
+"father":"👨","mother":"👩","brother":"👦","sister":"👧","grandpa":"👴","grandma":"👵","family":"👨‍👩‍👧‍👦","uncle":"👨","aunt":"👩","parent":"👪",
+"boy":"👦","girl":"👧","teacher":"👩‍🏫","friend":"🤝","baby":"👶","child":"🧒","man":"👨","woman":"👩","people":"👥",
+"classroom":"🏫","library":"📚","playground":"🛝","gym":"🏟️","computer":"💻","homework":"📝","student":"🎓","school":"🏫",
+"sunny":"☀️","rainy":"🌧️","cloudy":"☁️","windy":"💨","snowy":"❄️","weather":"🌤️","spring":"🌸","summer":"🏖️","autumn":"🍂","winter":"❄️","season":"🍃","rain":"🌧️","snow":"❄️","wind":"💨","warm":"🌡️",
+"shirt":"👔","T-shirt":"👕","skirt":"👗","dress":"👗","pants":"👖","shoes":"👟","hat":"🧢","coat":"🧥","jacket":"🧥","sweater":"🧶","socks":"🧦","gloves":"🧤","scarf":"🧣",
+"doctor":"👨‍⚕️","nurse":"👩‍⚕️","driver":"🚕","farmer":"👨‍🌾","worker":"👷","police":"👮","cook":"👨‍🍳","postman":"📮","pilot":"👨‍✈️","vet":"🐾","job":"💼",
+"park":"🏞️","zoo":"🦁","hospital":"🏥","shop":"🏪","supermarket":"🛒","cinema":"🎬","museum":"🏛️","station":"🚉","street":"🛣️","city":"🏙️","country":"🗺️","world":"🌍","home":"🏠","room":"🛏️","door":"🚪","window":"🪟",
+"bus":"🚌","bike":"🚲","train":"🚆","plane":"✈️","ship":"🚢","taxi":"🚕","subway":"🚇",
+"key":"🔑","phone":"📞","picture":"🖼️","map":"🗺️","story":"📖","flower":"🌸","tree":"🌳","grass":"🌿","river":"🏞️","mountain":"⛰️","lake":"💧","sea":"🌊",
+"happy":"😄","sad":"😢","angry":"😠","afraid":"😨","tired":"😫","hungry":"😋","thirsty":"🥤","sick":"🤒","excited":"🤩","cute":"🥰",
+"travel":"✈️","trip":"🧳","visit":"🏛️","tourist":"🧳","ticket":"🎫","hotel":"🏨","luggage":"🧳","camera":"📷","vacation":"🏖️","holiday":"🎉","beach":"🏖️","island":"🏝️","bridge":"🌉","tower":"🗼","palace":"🏰",
+"forest":"🌲","animal":"🐾","plant":"🌱","insect":"🐛","sky":"🌌","cloud":"☁️","land":"🗺️","earth":"🌍","stone":"🪨","sand":"🏜️","field":"🌾","farm":"🚜","garden":"🌷","village":"🏡",
+"robot":"🤖","science":"🔬","space":"🌌","rocket":"🚀","satellite":"🛰️","Internet":"🌐","email":"📧","message":"💬",
+"dream":"💭","future":"🔮","plan":"📋","news":"📰","newspaper":"📰","magazine":"📖","diary":"📔","letter":"✉️","gift":"🎁","party":"🎉","match":"⚽","team":"👥","winner":"🏆","prize":"🏅","word":"🔤","sentence":"📝","language":"🗣️","festival":"🎊",
+"football":"⚽","basketball":"🏀","ping-pong":"🏓","swimming":"🏊","running":"🏃","skating":"⛸️","skiing":"⛷️","sport":"⚽","exercise":"🏃","health":"💪","medicine":"💊","pill":"💊","fever":"🤒","headache":"🤕","toothache":"🦷",
+"environment":"🌍","protect":"🛡️","pollution":"🏭","recycle":"♻️","energy":"⚡","rubbish":"🗑️","litter":"🗑️","nature":"🌿","save":"💾",
+"scientist":"👨‍🔬","astronaut":"👨‍🚀","artist":"🎨","writer":"✍️","singer":"🎤","dancer":"💃","player":"⚽","inventor":"💡","engineer":"👷","hero":"🦸",
+"love":"❤️","peace":"🕊️","history":"📜","music":"🎵","song":"🎶","dance":"💃","sing":"🎤","run":"🏃","jump":"🦘","read":"📖","write":"✍️","eat":"🍽️","drink":"🥤","sleep":"😴","walk":"🚶","fly":"🕊️",
+"Monday":"📅","Tuesday":"📅","Wednesday":"📅","Thursday":"📅","Friday":"📅","Saturday":"🎉","Sunday":"🎉","week":"📅","weekend":"🎉","time":"⏰","early":"🌅","late":"🌙",
+"big":"🐘","small":"🐜","long":"📏","tall":"🦒","hot":"🔥","cold":"🧊","cool":"😎","new":"✨","old":"🏚️",
+"one":"1️⃣","two":"2️⃣","three":"3️⃣","four":"4️⃣","five":"5️⃣","six":"6️⃣","seven":"7️⃣","eight":"8️⃣","nine":"9️⃣","ten":"🔟"
+};
+
 // 语法知识
 const GRAMMAR = [
 {g:3,tag:"句型",title:"be动词用法 (am/is/are)",body:"<b>I</b> 用 am，<b>you</b> 用 are，<b>he/she/it</b> 用 is，复数全用 are。<div class='grammar-example'>I <b>am</b> a student. 我是一名学生。<br>She <b>is</b> my teacher. 她是我的老师。<br>They <b>are</b> my friends. 他们是我的朋友。</div>口诀：我用am，你用are，is连着他她它，复数全部都用are。"},
@@ -423,18 +483,64 @@ const GRAMMAR = [
 
 // 宠物商店
 const PET_SHOP = [
-{id:"cat",emoji:"🐱",name:"小猫咪",price:0,desc:"温顺可爱的小猫"},
-{id:"dog",emoji:"🐶",name:"小狗狗",price:0,desc:"忠诚活泼的小狗"},
-{id:"rabbit",emoji:"🐰",name:"小兔子",price:50,desc:"软萌软萌的兔子"},
-{id:"panda",emoji:"🐼",name:"小熊猫",price:100,desc:"国宝级萌物"},
-{id:"fox",emoji:"🦊",name:"小狐狸",price:150,desc:"聪明伶俐的狐狸"},
-{id:"owl",emoji:"🦉",name:"猫头鹰",price:200,desc:"智慧的象征"},
-{id:"unicorn",emoji:"🦄",name:"独角兽",price:300,desc:"梦幻神奇的生物"},
-{id:"dragon",emoji:"🐲",name:"小神龙",price:500,desc:"传说中的神兽"}
+{id:"cat",emoji:"🐱",name:"小猫咪",price:0,tier:"新手",desc:"温顺可爱的小猫"},
+{id:"dog",emoji:"🐶",name:"小狗狗",price:0,tier:"新手",desc:"忠诚活泼的小狗"},
+{id:"rabbit",emoji:"🐰",name:"小兔子",price:60,tier:"普通",desc:"软萌软萌的兔子"},
+{id:"hamster",emoji:"🐹",name:"小仓鼠",price:100,tier:"普通",desc:"爱囤粮食的小家伙"},
+{id:"penguin",emoji:"🐧",name:"小企鹅",price:150,tier:"普通",desc:"摇摇摆摆超可爱"},
+{id:"panda",emoji:"🐼",name:"小熊猫",price:220,tier:"稀有",desc:"国宝级萌物"},
+{id:"fox",emoji:"🦊",name:"小狐狸",price:300,tier:"稀有",desc:"聪明伶俐的狐狸"},
+{id:"owl",emoji:"🦉",name:"猫头鹰",price:400,tier:"稀有",desc:"智慧的象征"},
+{id:"koala",emoji:"🐨",name:"小考拉",price:520,tier:"珍稀",desc:"爱睡觉的抱树高手"},
+{id:"tiger",emoji:"🐯",name:"小老虎",price:660,tier:"珍稀",desc:"威风凛凛的百兽之王"},
+{id:"unicorn",emoji:"🦄",name:"独角兽",price:850,tier:"传说",desc:"梦幻神奇的生物"},
+{id:"phoenix",emoji:"🐦‍🔥",name:"小凤凰",price:1100,tier:"传说",desc:"浴火重生的神鸟"},
+{id:"dragon",emoji:"🐲",name:"小神龙",price:1500,tier:"神话",desc:"传说中的东方神兽"},
+{id:"qilin",emoji:"🦌",name:"小麒麟",price:2000,tier:"神话",desc:"祥瑞之兽，学霸专属"}
 ];
 
 // ==================== 记忆曲线 ====================
 const INTERVALS = [0, 1, 2, 4, 7, 15, 30]; // 各等级复习间隔(天)
+
+// ==================== 音频引擎 ====================
+let audioCtx=null;
+function getAudio(){ if(!audioCtx){ try{ audioCtx=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){} } if(audioCtx&&audioCtx.state==='suspended') audioCtx.resume(); return audioCtx; }
+function tone(freq,dur,type,vol,delay){
+  const ctx=getAudio(); if(!ctx) return;
+  const t=ctx.currentTime+(delay||0);
+  const o=ctx.createOscillator(), g=ctx.createGain();
+  o.type=type||'sine'; o.frequency.setValueAtTime(freq,t);
+  g.gain.setValueAtTime(0.0001,t);
+  g.gain.exponentialRampToValueAtTime(vol||0.18,t+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t+dur+0.02);
+}
+const SFX={
+  click(){ tone(880,0.06,'square',0.08); },
+  correct(){ tone(660,0.1,'sine',0.18); tone(880,0.12,'sine',0.18,0.09); tone(1100,0.16,'sine',0.16,0.18); },
+  wrong(){ tone(220,0.18,'sawtooth',0.12); tone(160,0.25,'sawtooth',0.12,0.12); },
+  coin(){ tone(1200,0.08,'square',0.12); tone(1600,0.14,'square',0.12,0.07); },
+  feed(){ tone(300,0.08,'sine',0.2); tone(240,0.08,'sine',0.2,0.1); tone(300,0.08,'sine',0.2,0.2); },
+  play(){ tone(523,0.09,'triangle',0.16); tone(659,0.09,'triangle',0.16,0.09); tone(784,0.12,'triangle',0.16,0.18); },
+  levelup(){ [523,659,784,1047].forEach((f,i)=>tone(f,0.14,'triangle',0.16,i*0.1)); },
+  pop(){ tone(500,0.05,'sine',0.12); }
+};
+// 单词发音 (Web Speech API)
+let ttsReady=false, ttsVoices=[];
+function loadVoices(){ ttsVoices=speechSynthesis.getVoices().filter(v=>v.lang.startsWith('en')); ttsReady=ttsVoices.length>0; }
+if('speechSynthesis' in window){ loadVoices(); speechSynthesis.onvoiceschanged=loadVoices; }
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  try{
+    speechSynthesis.cancel();
+    const u=new SpeechSynthesisUtterance(text);
+    u.lang='en-US'; u.rate=0.85; u.pitch=1;
+    const en=ttsVoices.find(v=>v.lang==='en-US')||ttsVoices[0];
+    if(en) u.voice=en;
+    speechSynthesis.speak(u);
+  }catch(e){}
+}
 
 // ==================== 状态管理 ====================
 let S = loadState();
@@ -475,7 +581,8 @@ function wordStatus(key){
 }
 function getNewWords(count){
   const all=allWordsForGrade(S.grade);
-  return all.filter(w=>!S.words[w.key]).slice(0,count);
+  // 乱序混排：简单词和复杂词穿插，避免从三年级全部学起
+  return shuffle(all.filter(w=>!S.words[w.key])).slice(0,count);
 }
 function getReviewWords(){
   const today=todayStr();
@@ -515,12 +622,15 @@ function petDecay(){
   if(!p.lastFed) p.lastFed=today;
 }
 function feedPet(cost){
-  if(S.points<cost){ showToast("积分不够哦，快去背单词吧！"); return; }
+  if(S.points<cost){ showToast("积分不够哦，快去背单词吧！"); SFX.wrong(); return; }
   S.points-=cost;
   S.pets.hunger=Math.min(100,S.pets.hunger+25);
   S.pets.exp+=10;
+  S.pets.lastFed=todayStr();
   checkPetLevel();
   saveState(); updatePointsDisplay(); renderPet();
+  SFX.feed();
+  petAnim("anim-eat"); spawnFood(); spawnParticles(["😋","✨","💛"],3);
   showToast("宠物吃得很开心！+10经验");
 }
 function playWithPet(){
@@ -528,22 +638,26 @@ function playWithPet(){
   S.pets.exp+=5;
   checkPetLevel();
   saveState(); renderPet();
+  SFX.play();
+  petAnim("anim-jump"); spawnParticles(["❤️","🎾","😄"],4);
   showToast("和宠物玩耍，心情+15！");
 }
 function giftPet(){
-  if(S.points<20){ showToast("需要20积分买礼物哦！"); return; }
+  if(S.points<20){ showToast("需要20积分买礼物哦！"); SFX.wrong(); return; }
   S.points-=20;
   S.pets.mood=Math.min(100,S.pets.mood+30);
   S.pets.hunger=Math.min(100,S.pets.hunger+10);
   S.pets.exp+=20;
   checkPetLevel();
   saveState(); updatePointsDisplay(); renderPet();
+  SFX.coin(); 
+  petAnim("anim-spin"); spawnParticles(["🎁","✨","💖","🌟"],5);
   showToast("宠物收到礼物，超级开心！+20经验");
 }
 function checkPetLevel(){
   const p=S.pets;
   const need=p.level*50;
-  if(p.exp>=need){ p.exp-=need; p.level++; showToast("恭喜！宠物升到了"+p.level+"级！"); }
+  if(p.exp>=need){ p.exp-=need; p.level++; SFX.levelup(); showToast("恭喜！宠物升到了"+p.level+"级！"); }
 }
 function petStudyReward(){
   S.pets.hunger=Math.min(100,S.pets.hunger+8);
@@ -551,6 +665,40 @@ function petStudyReward(){
   S.pets.exp+=8;
   S.pets.lastFed=todayStr();
   checkPetLevel();
+}
+// 宠物动画辅助
+function petAnim(cls){
+  const el=document.querySelector("#petMain .pet-emoji");
+  if(!el) return;
+  el.classList.remove("anim-eat","anim-jump","anim-spin","anim-wiggle","anim-sleep");
+  void el.offsetWidth; // 重置动画
+  el.classList.add(cls);
+  setTimeout(()=>el.classList.remove(cls),1800);
+}
+function spawnParticles(emojis,n){
+  const stage=document.querySelector("#petMain .pet-stage");
+  if(!stage) return;
+  for(let i=0;i<n;i++){
+    const el=document.createElement("div");
+    el.className="pet-particle";
+    el.textContent=emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left=(20+Math.random()*60)+"%";
+    el.style.top=(30+Math.random()*30)+"%";
+    el.style.animationDelay=(i*0.12)+"s";
+    stage.appendChild(el);
+    setTimeout(()=>el.remove(),1400);
+  }
+}
+function spawnFood(){
+  const stage=document.querySelector("#petMain .pet-stage");
+  if(!stage) return;
+  const foods=["🍎","🍖","🥕","🍪","🍤"];
+  const el=document.createElement("div");
+  el.className="pet-food";
+  el.textContent=foods[Math.floor(Math.random()*foods.length)];
+  el.style.left="50%"; el.style.top="45%";
+  stage.appendChild(el);
+  setTimeout(()=>el.remove(),800);
 }
 function petStatusMsg(){
   const p=S.pets;
@@ -623,15 +771,15 @@ function renderHome(){
   plan.innerHTML+=`<div class="plan-item">
     <div class="plan-info"><div class="plan-icon" style="background:#F0EDFF">📖</div>
     <div><div style="font-weight:600;font-size:14px">学习新词</div><div style="font-size:12px;color:var(--text-light)">${newWords.length>0?newWords.length+"个新词等你":"今日新词已完成"}</div></div></div>
-    <button class="plan-btn ${newWords.length?"learn":"done"}" onclick="switchPage('learn')">${newWords.length?"去学习":"已完成"}</button></div>`;
+    <button class="plan-btn ${newWords.length?"learn":"done"}" onclick="SFX.click();switchPage('learn')">${newWords.length?"去学习":"已完成"}</button></div>`;
   plan.innerHTML+=`<div class="plan-item">
     <div class="plan-info"><div class="plan-icon" style="background:#E8FFF8">🔄</div>
     <div><div style="font-weight:600;font-size:14px">复习旧词</div><div style="font-size:12px;color:var(--text-light)">${reviewWords.length>0?reviewWords.length+"个词需要复习":"暂无复习任务"}</div></div></div>
-    <button class="plan-btn ${reviewWords.length?"review":"done"}" onclick="switchPage('review')">${reviewWords.length?"去复习":"已完成"}</button></div>`;
+    <button class="plan-btn ${reviewWords.length?"review":"done"}" onclick="SFX.click();switchPage('review')">${reviewWords.length?"去复习":"已完成"}</button></div>`;
   plan.innerHTML+=`<div class="plan-item">
     <div class="plan-info"><div class="plan-icon" style="background:#FFF3CD">✏️</div>
     <div><div style="font-weight:600;font-size:14px">单词测试</div><div style="font-size:12px;color:var(--text-light)">检验学习成果赚积分</div></div></div>
-    <button class="plan-btn learn" onclick="switchPage('test')">去测试</button></div>`;
+    <button class="plan-btn learn" onclick="SFX.click();switchPage('test')">去测试</button></div>`;
   // 进度
   const all=allWordsForGrade(S.grade);
   const learned=all.filter(w=>S.words[w.key]).length;
@@ -649,17 +797,17 @@ function renderHome(){
 }
 
 // ==================== 学习 ====================
-let learnQueue=[], learnIdx=0, learnRevealed=false;
+let learnQueue=[], learnIdx=0, learnCorrectCount=0;
 function renderLearn(){
   learnQueue=getNewWords(S.dailyNew);
-  learnIdx=0;
+  learnIdx=0; learnCorrectCount=0;
   if(!learnQueue.length){
     document.getElementById("learnArea").innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
       <div style="font-size:56px;margin-bottom:16px">🎉</div>
       <div style="font-size:17px;font-weight:700;margin-bottom:8px">今日新词已全部学完！</div>
       <div style="font-size:14px;color:var(--text-light);margin-bottom:20px">可以在设置中增加每天的新词数量</div>
-      <button class="big-btn" onclick="switchPage('review')">去复习巩固</button>
-      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+      <button class="big-btn" onclick="SFX.click();switchPage('review')">去复习巩固</button>
+      <button class="big-btn secondary" onclick="SFX.click();switchPage('home')">返回首页</button></div>`;
     return;
   }
   showLearnCard();
@@ -669,38 +817,79 @@ function showLearnCard(){
     document.getElementById("learnArea").innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
       <div style="font-size:56px;margin-bottom:16px;animation:bounce 1s infinite">🌟</div>
       <div style="font-size:17px;font-weight:700;margin-bottom:8px">太棒了！${learnQueue.length}个新词学习完成！</div>
-      <div class="result-points">获得 ${learnQueue.length*2} 积分</div>
-      <button class="big-btn" onclick="switchPage('review')">趁热打铁去复习</button>
-      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+      <div style="font-size:14px;color:var(--text-light)">一次答对 ${learnCorrectCount} 个</div>
+      <div class="result-points">获得积分已到账</div>
+      <button class="big-btn" onclick="SFX.click();switchPage('review')">趁热打铁去复习</button>
+      <button class="big-btn secondary" onclick="SFX.click();switchPage('home')">返回首页</button></div>`;
+    SFX.levelup();
     return;
   }
   const w=learnQueue[learnIdx];
-  learnRevealed=false;
-  document.getElementById("learnArea").innerHTML=`<div class="card word-card">
+  const all=allWordsForGrade(S.grade);
+  // 生成4个中文选项
+  let options=[w];
+  while(options.length<4){
+    const r=all[Math.floor(Math.random()*all.length)];
+    if(!options.find(o=>o.key===r.key)&&r.cn!==w.cn) options.push(r);
+  }
+  options=shuffle(options);
+  const emoji=EMOJI_MAP[w.en];
+  document.getElementById("learnArea").innerHTML=`<div class="card word-card" style="min-height:auto;padding:24px 20px">
     <span class="word-topic">${w.type==="phrase"?"短语":"单词"} · ${w.grade}年级</span>
     <span class="word-counter">${learnIdx+1}/${learnQueue.length}</span>
-    <div class="word-en">${w.en}</div>
-    <div class="word-cn hidden-word" id="learnCn">${w.cn}</div>
-    <div class="word-actions" id="learnActions">
-      <button class="btn-show" onclick="revealLearn()">显示释义</button>
-    </div></div>
-    <div class="progress-track" style="margin-top:12px"><div class="progress-fill" style="width:${learnIdx/learnQueue.length*100}%"></div></div>`;
+    ${emoji?`<div class="word-emoji">${emoji}</div>`:""}
+    <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+      <div class="word-en" style="font-size:32px">${w.en}</div>
+      <button class="speak-btn" onclick="speak('${w.en.replace(/'/g,"\\'")}')">🔊</button>
+    </div>
+    <div style="font-size:13px;color:var(--text-light);margin:10px 0 16px">选出正确的中文意思</div>
+    <div id="learnOptions">${options.map(o=>`<button class="quiz-option" onclick="learnAnswer(this,'${o.key}','${w.key}')">${o.cn}</button>`).join("")}</div>
+    <div id="learnMemorize"></div>
+  </div>
+  <div class="progress-track" style="margin-top:12px"><div class="progress-fill" style="width:${learnIdx/learnQueue.length*100}%"></div></div>`;
+  // 自动发音
+  setTimeout(()=>speak(w.en),350);
 }
-function revealLearn(){
-  if(learnRevealed) return;
-  learnRevealed=true;
-  document.getElementById("learnCn").classList.remove("hidden-word");
-  document.getElementById("learnActions").innerHTML=`
-    <button class="btn-know no" onclick="learnAnswer(false)">不认识</button>
-    <button class="btn-know yes" onclick="learnAnswer(true)">认识</button>`;
-}
-function learnAnswer(known){
+function learnAnswer(btn, chosen, correctKey){
   const w=learnQueue[learnIdx];
-  if(!S.words[w.key]) S.words[w.key]={lv:0,next:dateOffset(1),learned:todayStr(),correct:0,wrong:0};
-  if(known){ S.words[w.key].correct++; S.words[w.key].lv=1; S.words[w.key].next=dateOffset(INTERVALS[1]); addPoints(2); }
-  else { S.words[w.key].wrong++; S.words[w.key].next=dateOffset(1); addPoints(1); }
-  markStudied(); petStudyReward(); saveState();
-  learnIdx++; showLearnCard();
+  const isCorrect=chosen===correctKey;
+  const opts=document.querySelectorAll("#learnOptions .quiz-option");
+  opts.forEach(o=>o.classList.add("disabled"));
+  if(isCorrect){
+    btn.classList.add("correct");
+    SFX.correct();
+    learnCorrectCount++;
+    // 一次答对=认识，记忆等级直接到2(4天后复习)
+    if(!S.words[w.key]) S.words[w.key]={lv:0,next:todayStr(),learned:todayStr(),correct:0,wrong:0};
+    S.words[w.key].correct++; S.words[w.key].lv=2; S.words[w.key].next=dateOffset(INTERVALS[2]);
+    addPoints(3);
+    markStudied(); petStudyReward(); saveState();
+    setTimeout(()=>{ learnIdx++; showLearnCard(); },700);
+  } else {
+    btn.classList.add("wrong");
+    SFX.wrong();
+    // 标出正确答案
+    const all=allWordsForGrade(S.grade);
+    const cw=all.find(x=>x.key===correctKey);
+    opts.forEach(o=>{ if(o.textContent===cw.cn) o.classList.add("correct"); });
+    // 不认识=需要重点记忆，明天复习，并插回队列稍后再出现一次
+    if(!S.words[w.key]) S.words[w.key]={lv:0,next:todayStr(),learned:todayStr(),correct:0,wrong:0};
+    S.words[w.key].wrong++; S.words[w.key].lv=0; S.words[w.key].next=dateOffset(1);
+    addPoints(1);
+    markStudied(); petStudyReward(); saveState();
+    if(learnQueue.filter(x=>x.key===w.key).length===1){ learnQueue.splice(learnIdx+1+Math.floor(Math.random()*2),0,{...w}); }
+    // 显示记忆助手
+    const emoji=EMOJI_MAP[w.en];
+    document.getElementById("learnMemorize").innerHTML=`<div class="memorize-box">
+      <div style="font-size:13px;color:#00B894;font-weight:700;margin-bottom:6px">📌 记住它</div>
+      ${emoji?`<div style="font-size:40px">${emoji}</div>`:""}
+      <div style="font-size:20px;font-weight:800;color:var(--primary)">${w.en}</div>
+      <div style="font-size:16px;margin:4px 0">${w.cn}</div>
+      <button class="speak-btn" style="margin-top:6px" onclick="speak('${w.en.replace(/'/g,"\\'")}')">🔊 再听一遍</button>
+      <button class="big-btn" style="margin-top:12px" onclick="SFX.click();learnIdx++;showLearnCard()">记住了，下一题 →</button>
+    </div>`;
+    speak(w.en);
+  }
 }
 
 // ==================== 复习(选择题) ====================
@@ -743,19 +932,25 @@ function showReviewCard(){
     <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">复习 ${reviewIdx+1}/${reviewQueue.length}</div>
     <div class="card">
       <div class="quiz-type-tag">${dir?"选出正确的中文意思":"选出正确的英文单词"}</div>
-      <div class="quiz-prompt">${dir?w.en:w.cn}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div class="quiz-prompt" style="padding:16px 0">${dir?w.en:w.cn}</div>
+        ${dir?`<button class="speak-btn" onclick="speak('${w.en.replace(/'/g,"\\'")}')">🔊</button>`:""}
+      </div>
       <div id="reviewOptions">${options.map(o=>`<button class="quiz-option" onclick="reviewAnswer(this,'${o.key}','${w.key}',${dir})">${dir?o.cn:o.en}</button>`).join("")}</div>
     </div>
     <div class="progress-track"><div class="progress-fill" style="width:${reviewIdx/reviewQueue.length*100}%"></div></div>`;
+  if(dir) setTimeout(()=>speak(w.en),300);
 }
 function reviewAnswer(btn, chosen, correct, dir){
   const opts=document.querySelectorAll("#reviewOptions .quiz-option");
   opts.forEach(o=>o.classList.add("disabled"));
   const isCorrect=chosen===correct;
-  if(isCorrect){ btn.classList.add("correct"); reviewCorrect++; addPoints(3); }
+  if(isCorrect){ btn.classList.add("correct"); reviewCorrect++; addPoints(3); SFX.correct(); }
   else{
-    btn.classList.add("wrong");
-    opts.forEach(o=>{ if(o.textContent===(dir?allWordsForGrade(S.grade).find(w=>w.key===correct).cn:allWordsForGrade(S.grade).find(w=>w.key===correct).en)) o.classList.add("correct"); });
+    btn.classList.add("wrong"); SFX.wrong();
+    const cw=allWordsForGrade(S.grade).find(w=>w.key===correct);
+    opts.forEach(o=>{ if(o.textContent===(dir?cw.cn:cw.en)) o.classList.add("correct"); });
+    speak(cw.en);
   }
   recordAnswer(correct, isCorrect);
   markStudied(); petStudyReward(); saveState();
@@ -764,6 +959,7 @@ function reviewAnswer(btn, chosen, correct, dir){
 
 // ==================== 测试 ====================
 let testQuestions=[], testIdx=0, testCorrect=0, testMode="choice";
+let spellBank=[], spellSlots=[], spellTarget="", spellLocked=false;
 function renderTest(){
   const all=allWordsForGrade(S.grade);
   const learned=all.filter(w=>S.words[w.key]);
@@ -771,8 +967,8 @@ function renderTest(){
     <div style="font-size:48px;margin-bottom:16px">✏️</div>
     <div style="font-size:16px;font-weight:700;margin-bottom:6px">选择测试模式</div>
     <div style="font-size:13px;color:var(--text-light);margin-bottom:20px">已学 ${learned.length} 词可用于测试</div>
-    <button class="big-btn" onclick="startTest('choice')" ${learned.length<4?"disabled style='opacity:.4'":""}>选择题（4选1）</button>
-    <button class="big-btn" style="background:linear-gradient(135deg,#00B894,#55EFC4)" onclick="startTest('spell')" ${learned.length<1?"disabled style='opacity:.4'":""}>拼写题（看中文写英文）</button>
+    <button class="big-btn" onclick="SFX.click();startTest('choice')" ${learned.length<4?"disabled style='opacity:.4'":""}>选择题（4选1）</button>
+    <button class="big-btn" style="background:linear-gradient(135deg,#00B894,#55EFC4)" onclick="SFX.click();startTest('spell')" ${learned.length<1?"disabled style='opacity:.4'":""}>拼写题（字母块拼单词）</button>
     <div style="font-size:12px;color:var(--text-light);margin-top:14px">每次10题 · 答对越多积分越多</div></div>`;
 }
 function startTest(mode){
@@ -781,17 +977,24 @@ function startTest(mode){
   if(mode==="choice"&&learned.length<4){ showToast("至少学习4个单词才能测试"); return; }
   if(!learned.length){ showToast("先学几个单词再来测试吧"); return; }
   testMode=mode;
-  testQuestions=shuffle(learned).slice(0,10);
+  if(mode==="spell"){
+    // 拼写只用单个单词(不含短语)，避免空格复杂度
+    const wordOnly=learned.filter(w=>w.type==="word"&&w.en.length>=3&&w.en.length<=12);
+    if(!wordOnly.length){ showToast("学过的单词太少，先去学习吧"); return; }
+    testQuestions=shuffle(wordOnly).slice(0,10);
+  } else {
+    testQuestions=shuffle(learned).slice(0,10);
+  }
   testIdx=0; testCorrect=0;
   showTestCard();
 }
 function showTestCard(){
+  spellLocked=false;
   if(testIdx>=testQuestions.length){
     const rate=testCorrect/testQuestions.length;
     const pts=Math.round(testCorrect*5*(1+rate*0.5));
-    if(rate>=0.8) addPoints(pts);
-    else if(rate>=0.6) addPoints(Math.round(pts*0.6));
-    else addPoints(Math.round(pts*0.3));
+    let got=rate>=0.8?pts:rate>=0.6?Math.round(pts*0.6):Math.round(pts*0.3);
+    addPoints(got);
     const emoji=rate>=0.9?"🏆":rate>=0.7?"🌟":rate>=0.5?"💪":"📖";
     const msg=rate>=0.9?"太厉害了，你是单词大王！":rate>=0.7?"很棒，继续保持！":rate>=0.5?"不错，再加油！":"没关系，多复习几遍就会了！";
     document.getElementById("testArea").innerHTML=`<div class="card" style="text-align:center;padding:30px 20px">
@@ -799,10 +1002,11 @@ function showTestCard(){
       <div class="result-circle" style="background:linear-gradient(135deg,${rate>=0.6?"#6C5CE7,#A29BFE":"#E17055,#FAB1A0"})">${Math.round(rate*100)}%</div>
       <div style="font-size:16px;font-weight:700;margin-bottom:6px">答对 ${testCorrect}/${testQuestions.length}</div>
       <div style="font-size:14px;color:var(--text-light);margin-bottom:8px">${msg}</div>
-      <div class="result-points">测试积分已发放</div>
-      <button class="big-btn" onclick="startTest('${testMode}')">再测一次</button>
-      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
-    markStudied(); saveState();
+      <div class="result-points">+${got} 积分已到账</div>
+      <button class="big-btn" onclick="SFX.click();startTest('${testMode}')">再测一次</button>
+      <button class="big-btn secondary" onclick="SFX.click();switchPage('home')">返回首页</button></div>`;
+    markStudied(); petStudyReward(); saveState();
+    if(rate>=0.6) SFX.levelup(); else SFX.coin();
     return;
   }
   const w=testQuestions[testIdx];
@@ -815,58 +1019,104 @@ function showTestCard(){
     document.getElementById("testArea").innerHTML=`
       <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">第 ${testIdx+1}/${testQuestions.length} 题</div>
       <div class="card"><div class="quiz-type-tag">${dir?"选出正确的中文意思":"选出正确的英文"}</div>
-      <div class="quiz-prompt">${dir?w.en:w.cn}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div class="quiz-prompt" style="padding:16px 0">${dir?w.en:w.cn}</div>
+        ${dir?`<button class="speak-btn" onclick="speak('${w.en.replace(/'/g,"\\'")}')">🔊</button>`:""}
+      </div>
       <div id="testOptions">${options.map(o=>`<button class="quiz-option" onclick="testAnswer(this,'${o.key}','${w.key}',${dir})">${dir?o.cn:o.en}</button>`).join("")}</div></div>
       <div class="progress-track"><div class="progress-fill" style="width:${testIdx/testQuestions.length*100}%"></div></div>`;
+    if(dir) setTimeout(()=>speak(w.en),300);
   } else {
-    document.getElementById("testArea").innerHTML=`
-      <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">第 ${testIdx+1}/${testQuestions.length} 题</div>
-      <div class="card" style="text-align:center">
-        <div class="quiz-type-tag">根据中文拼写英文</div>
-        <div class="quiz-prompt" style="font-size:24px">${w.cn}</div>
-        <div class="spell-hint">提示：${w.en.length}个字母，首字母 <b style="color:var(--primary)">${w.en[0]}</b></div>
-        <input class="spell-input" id="spellInput" autocomplete="off" autocapitalize="none" placeholder="输入英文..." onkeydown="if(event.key==='Enter')checkSpell('${w.key}')">
-        <button class="spell-check-btn" onclick="checkSpell('${w.key}')">确认</button>
-        <div id="spellFeedback" style="margin-top:12px;font-size:14px"></div></div>
-      <div class="progress-track"><div class="progress-fill" style="width:${testIdx/testQuestions.length*100}%"></div></div>`;
-    setTimeout(()=>document.getElementById("spellInput")&&document.getElementById("spellInput").focus(),100);
+    setupSpell(w);
   }
 }
 function testAnswer(btn, chosen, correctKey, dir){
   const opts=document.querySelectorAll("#testOptions .quiz-option");
   opts.forEach(o=>o.classList.add("disabled"));
   const isCorrect=chosen===correctKey;
-  if(isCorrect){ btn.classList.add("correct"); testCorrect++; }
+  if(isCorrect){ btn.classList.add("correct"); testCorrect++; SFX.correct(); }
   else{
-    btn.classList.add("wrong");
-    const all=allWordsForGrade(S.grade);
-    const cw=all.find(x=>x.key===correctKey);
+    btn.classList.add("wrong"); SFX.wrong();
+    const cw=allWordsForGrade(S.grade).find(x=>x.key===correctKey);
     opts.forEach(o=>{ if(o.textContent===(dir?cw.cn:cw.en)) o.classList.add("correct"); });
+    speak(cw.en);
   }
   recordAnswer(correctKey, isCorrect); saveState();
   setTimeout(()=>{ testIdx++; showTestCard(); }, isCorrect?500:1200);
 }
-function checkSpell(key){
-  const input=document.getElementById("spellInput");
-  const all=allWordsForGrade(S.grade);
-  const w=all.find(x=>x.key===key);
-  const val=input.value.trim().toLowerCase();
-  const ans=w.en.toLowerCase();
+// ---- 字母块拼写 ----
+function setupSpell(w){
+  spellTarget=w.en.toLowerCase();
+  const letters=spellTarget.split("");
+  // 干扰字母
+  const alpha="abcdefghijklmnopqrstuvwxyz";
+  const nExtra=Math.min(4,Math.max(2,Math.floor(letters.length/3)));
+  const pool=[...letters];
+  for(let i=0;i<nExtra;i++) pool.push(alpha[Math.floor(Math.random()*26)]);
+  spellBank=shuffle(pool).map((ch,i)=>({ch,used:false,id:i}));
+  spellSlots=new Array(letters.length).fill(null);
+  drawSpell();
+  setTimeout(()=>speak(w.en),300);
+}
+function drawSpell(){
+  const w=testQuestions[testIdx];
+  const slotsHtml=spellSlots.map((s,i)=>`<div class="spell-slot ${s?"filled":""}" onclick="spellSlotTap(${i})">${s?s.ch:""}</div>`).join("");
+  const bankHtml=spellBank.map(t=>`<button class="letter-tile ${t.used?"used":""}" onclick="spellTileTap(${t.id})">${t.ch}</button>`).join("");
+  document.getElementById("testArea").innerHTML=`
+    <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">第 ${testIdx+1}/${testQuestions.length} 题</div>
+    <div class="card" style="text-align:center">
+      <div class="quiz-type-tag">点选字母，拼出英文单词</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px">
+        <div class="quiz-prompt" style="font-size:24px;padding:12px 0">${w.cn}</div>
+        <button class="speak-btn" onclick="speak('${w.en.replace(/'/g,"\\'")}')">🔊</button>
+      </div>
+      <div class="spell-slots" id="spellSlots">${slotsHtml}</div>
+      <div class="letter-bank" id="spellBank">${bankHtml}</div>
+      <div id="spellFeedback" style="margin-top:14px;font-size:14px;min-height:20px"></div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${testIdx/testQuestions.length*100}%"></div></div>`;
+}
+function spellTileTap(id){
+  if(spellLocked) return;
+  const t=spellBank[id];
+  if(t.used) return;
+  const idx=spellSlots.indexOf(null);
+  if(idx===-1) return;
+  t.used=true;
+  spellSlots[idx]={ch:t.ch,id};
+  SFX.pop();
+  drawSpell();
+  if(!spellSlots.includes(null)) setTimeout(checkSpellTiles,300);
+}
+function spellSlotTap(i){
+  if(spellLocked) return;
+  const s=spellSlots[i];
+  if(!s) return;
+  spellBank[s.id].used=false;
+  spellSlots[i]=null;
+  SFX.pop();
+  drawSpell();
+}
+function checkSpellTiles(){
+  if(spellLocked) return;
+  spellLocked=true;
+  const w=testQuestions[testIdx];
+  const attempt=spellSlots.map(s=>s.ch).join("");
+  const correct=attempt===spellTarget;
+  // 标色
+  const slotEls=document.querySelectorAll("#spellSlots .spell-slot");
+  spellTarget.split("").forEach((ch,i)=>{ if(slotEls[i]) slotEls[i].classList.add(spellSlots[i].ch===ch?"ok":"bad"); });
   const fb=document.getElementById("spellFeedback");
-  if(!val) return;
-  if(val===ans){
-    input.classList.add("correct"); testCorrect++;
-    fb.innerHTML=`<span style="color:var(--success);font-weight:700">✓ 正确！</span>`;
-    recordAnswer(key,true);
+  if(correct){
+    testCorrect++; SFX.correct(); speak(w.en);
+    fb.innerHTML=`<span style="color:var(--success);font-weight:700">✓ 拼对啦！</span>`;
   } else {
-    input.classList.add("wrong");
-    fb.innerHTML=`<span style="color:var(--danger)">✗ 正确答案：<b>${w.en}</b></span>`;
-    recordAnswer(key,false);
+    SFX.wrong();
+    fb.innerHTML=`<span style="color:var(--danger)">✗ 正确拼写：<b style="letter-spacing:2px">${w.en}</b></span>`;
+    setTimeout(()=>speak(w.en),500);
   }
-  input.disabled=true;
-  document.querySelector(".spell-check-btn").disabled=true;
-  saveState();
-  setTimeout(()=>{ testIdx++; showTestCard(); }, 1500);
+  recordAnswer(w.key,correct); saveState();
+  setTimeout(()=>{ testIdx++; showTestCard(); }, correct?1100:1800);
 }
 
 // ==================== 单词本 ====================
@@ -930,9 +1180,11 @@ function renderPet(){
   } else {
     const info=PET_SHOP.find(x=>x.id===p.active);
     const need=p.level*50;
+    const isSad=p.hunger<20||p.mood<20;
+    const idleAnim=isSad?"":"anim-sleep";
     main.innerHTML=`<div class="card"><div class="pet-stage">
-      <div class="pet-emoji" onclick="petTouch()">${petEmoji()}</div>
-      <div class="pet-name">${info?info.name:"宠物"}</div>
+      <div class="pet-emoji ${idleAnim}" onclick="petTouch()">${petEmoji()}</div>
+      <div class="pet-name">${info?info.name:"宠物"} ${info?`<span style="font-size:11px;background:#F0EDFF;color:var(--primary);padding:2px 8px;border-radius:8px;vertical-align:middle">${info.tier}</span>`:""}</div>
       <div class="pet-level">Lv.${p.level} · 经验 ${p.exp}/${need}</div>
       <div class="pet-status-msg">${petStatusMsg()}</div></div>
       <div class="stat-row"><span class="stat-label">饱食</span><div class="stat-bar"><div class="stat-fill hunger" style="width:${p.hunger}%"></div></div><span class="stat-val">${Math.round(p.hunger)}</span></div>
@@ -946,7 +1198,7 @@ function renderPet(){
       <div style="margin-top:14px;font-size:12px;color:var(--text-light);text-align:center">每天背单词和复习都会自动喂养宠物哦~</div></div>`;
     if(p.owned.length>1){
       main.innerHTML+=`<div class="card"><div class="card-title">切换宠物</div><div style="display:flex;gap:12px;flex-wrap:wrap">`+
-        p.owned.map(id=>{ const it=PET_SHOP.find(x=>x.id===id); return `<div style="text-align:center;cursor:pointer;padding:8px 14px;border-radius:12px;border:2px solid ${p.active===id?"var(--primary)":"#F1F2F6"}" onclick="S.pets.active='${id}';saveState();renderPet()"><div style="font-size:32px">${it.emoji}</div><div style="font-size:12px">${it.name}</div></div>`; }).join("")+`</div></div>`;
+        p.owned.map(id=>{ const it=PET_SHOP.find(x=>x.id===id); return `<div style="text-align:center;cursor:pointer;padding:8px 14px;border-radius:12px;border:2px solid ${p.active===id?"var(--primary)":"#F1F2F6"}" onclick="SFX.click();S.pets.active='${id}';saveState();renderPet()"><div style="font-size:32px">${it.emoji}</div><div style="font-size:12px">${it.name}</div></div>`; }).join("")+`</div></div>`;
     }
   }
   // 商店
@@ -955,27 +1207,32 @@ function renderPet(){
     const owned=p.owned.includes(it.id);
     const canBuy=S.points>=it.price;
     return `<div class="shop-item ${owned?"owned":""}">
-      <div class="shop-emoji">${it.emoji}</div>
+      <div style="font-size:10px;color:${it.tier==="神话"?"#E84393":it.tier==="传说"?"#6C5CE7":it.tier==="珍稀"?"#00B894":"#B2BEC3"};font-weight:700">${it.tier}${it.price>0?" · 需"+it.price+"积分":""}</div>
+      <div class="shop-emoji">${owned?it.emoji:(canBuy?it.emoji:it.emoji)}</div>
       <div class="shop-name">${it.name}</div>
       <div style="font-size:11px;color:var(--text-light)">${it.desc}</div>
       <div class="shop-price">${it.price===0?"免费领养":"⭐ "+it.price+" 积分"}</div>
-      ${owned?`<button class="shop-btn select" onclick="S.pets.active='${it.id}';saveState();renderPet();showToast('已切换到${it.name}')">${p.active===it.id?"当前":"选择"}</button>`
+      ${owned?`<button class="shop-btn select" onclick="SFX.click();S.pets.active='${it.id}';saveState();renderPet();showToast('已切换到${it.name}')">${p.active===it.id?"当前":"选择"}</button>`
       :`<button class="shop-btn" onclick="buyPet('${it.id}')" ${canBuy?"":"disabled"}>${canBuy?"领养":"积分不足"}</button>`}</div>`;
   }).join("")+`</div>`;
 }
 function buyPet(id){
   const it=PET_SHOP.find(x=>x.id===id);
-  if(S.points<it.price){ showToast("积分不够哦！"); return; }
+  if(S.points<it.price){ showToast("积分不够哦！"); SFX.wrong(); return; }
   S.points-=it.price;
   S.pets.owned.push(id);
   S.pets.active=id;
   S.pets.hunger=80; S.pets.mood=80;
   saveState(); updatePointsDisplay(); renderPet();
+  SFX.levelup(); spawnParticles(["🎉","✨","💖","🌟"],6);
   showToast(`恭喜领养了${it.name}！好好照顾它吧~`);
 }
 function petTouch(){
   S.pets.mood=Math.min(100,S.pets.mood+2);
-  saveState(); renderPet();
+  saveState();
+  SFX.pop();
+  petAnim("anim-wiggle"); spawnParticles(["💕","😊"],2);
+  renderPet();
   showToast(["摸摸头~","宠物蹭了蹭你的手","它看起来很开心！","咕噜咕噜~"][Math.floor(Math.random()*4)]);
 }
 
