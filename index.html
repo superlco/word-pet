@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>单词小宠物 - 快乐背单词</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+:root {
+  --primary:#6C5CE7; --primary-light:#A29BFE; --success:#00B894; --danger:#E17055;
+  --warning:#FDCB6E; --bg:#F8F9FE; --card:#FFFFFF; --text:#2D3436; --text-light:#636E72;
+  --radius:16px; --shadow:0 4px 15px rgba(108,92,231,0.1);
+}
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif; background:var(--bg); color:var(--text); max-width:480px; margin:0 auto; min-height:100vh; position:relative; overflow-x:hidden; }
+.page { display:none; padding:16px 16px 90px; animation:fadeIn .3s ease; }
+.page.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+@keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+@keyframes pop { 0%{transform:scale(0.8);opacity:0} 100%{transform:scale(1);opacity:1} }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
+@keyframes confetti { 0%{transform:translateY(0) rotate(0);opacity:1} 100%{transform:translateY(-80px) rotate(360deg);opacity:0} }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-6px)} }
+
+/* Header */
+.header { display:flex; align-items:center; justify-content:space-between; padding:8px 0 16px; }
+.header h1 { font-size:20px; background:linear-gradient(135deg,var(--primary),#E84393); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.points-badge { display:flex; align-items:center; gap:4px; background:linear-gradient(135deg,#FFEAA7,#FDCB6E); padding:6px 12px; border-radius:20px; font-size:14px; font-weight:700; color:#D68910; }
+
+/* Cards */
+.card { background:var(--card); border-radius:var(--radius); padding:20px; margin-bottom:14px; box-shadow:var(--shadow); }
+.card-title { font-size:15px; font-weight:700; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+
+/* Today Plan */
+.plan-item { display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-bottom:1px solid #F1F2F6; }
+.plan-item:last-child { border:none; }
+.plan-info { display:flex; align-items:center; gap:12px; }
+.plan-icon { width:42px; height:42px; border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+.plan-btn { padding:8px 16px; border:none; border-radius:20px; font-size:13px; font-weight:600; color:#fff; cursor:pointer; }
+.plan-btn.learn { background:linear-gradient(135deg,var(--primary),var(--primary-light)); }
+.plan-btn.review { background:linear-gradient(135deg,#00B894,#55EFC4); }
+.plan-btn.done { background:#DFE6E9; color:#B2BEC3; }
+
+/* Streak */
+.streak-bar { display:flex; align-items:center; gap:10px; background:linear-gradient(135deg,#6C5CE7,#A29BFE); border-radius:var(--radius); padding:14px 18px; color:#fff; margin-bottom:14px; }
+.streak-num { font-size:28px; font-weight:800; }
+.streak-dots { display:flex; gap:5px; margin-left:auto; }
+.streak-dot { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,0.3); }
+.streak-dot.on { background:#FFEAA7; }
+
+/* Progress */
+.progress-track { height:8px; background:#F1F2F6; border-radius:4px; overflow:hidden; margin-top:8px; }
+.progress-fill { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--primary),#E84393); transition:width .5s ease; }
+
+/* Learn Card */
+.word-card { text-align:center; padding:30px 20px; min-height:260px; display:flex; flex-direction:column; align-items:center; justify-content:center; position:relative; }
+.word-en { font-size:36px; font-weight:800; color:var(--primary); margin-bottom:8px; }
+.word-phonetic { font-size:14px; color:var(--text-light); margin-bottom:16px; }
+.word-cn { font-size:22px; font-weight:600; padding:10px 24px; background:#F8F9FE; border-radius:12px; }
+.word-cn.hidden-word { filter:blur(8px); user-select:none; }
+.word-topic { position:absolute; top:14px; left:18px; font-size:12px; background:#F0EDFF; color:var(--primary); padding:4px 10px; border-radius:10px; }
+.word-counter { position:absolute; top:14px; right:18px; font-size:12px; color:var(--text-light); }
+.word-actions { display:flex; gap:12px; margin-top:16px; }
+.btn-know { flex:1; padding:14px; border:none; border-radius:14px; font-size:16px; font-weight:700; cursor:pointer; transition:transform .1s; }
+.btn-know:active { transform:scale(0.96); }
+.btn-know.yes { background:linear-gradient(135deg,#00B894,#55EFC4); color:#fff; }
+.btn-know.no { background:linear-gradient(135deg,#E17055,#FAB1A0); color:#fff; }
+.btn-show { padding:12px 32px; border:2px solid var(--primary); background:#fff; color:var(--primary); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; }
+
+/* Quiz */
+.quiz-option { display:block; width:100%; padding:15px 18px; margin-bottom:10px; border:2px solid #F1F2F6; border-radius:14px; background:#fff; font-size:16px; text-align:left; cursor:pointer; transition:all .2s; }
+.quiz-option:active { transform:scale(0.98); }
+.quiz-option.correct { border-color:var(--success); background:#E8FFF8; }
+.quiz-option.wrong { border-color:var(--danger); background:#FFF0ED; animation:shake .3s; }
+.quiz-option.disabled { pointer-events:none; }
+.quiz-prompt { font-size:28px; font-weight:800; text-align:center; padding:24px 0; color:var(--primary); }
+.quiz-type-tag { text-align:center; font-size:12px; color:var(--text-light); margin-bottom:8px; }
+
+/* Spell */
+.spell-input { width:100%; padding:14px 18px; border:2px solid #DFE6E9; border-radius:14px; font-size:20px; text-align:center; letter-spacing:2px; outline:none; transition:border-color .2s; }
+.spell-input:focus { border-color:var(--primary); }
+.spell-input.correct { border-color:var(--success); background:#E8FFF8; }
+.spell-input.wrong { border-color:var(--danger); background:#FFF0ED; }
+.spell-hint { text-align:center; margin-top:10px; font-size:14px; color:var(--text-light); }
+.spell-check-btn { width:100%; margin-top:14px; padding:14px; border:none; border-radius:14px; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; font-size:16px; font-weight:700; cursor:pointer; }
+
+/* Result */
+.result-circle { width:120px; height:120px; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center; margin:20px auto; font-size:32px; font-weight:800; color:#fff; }
+.result-detail { text-align:center; color:var(--text-light); font-size:14px; margin-bottom:16px; }
+.result-points { text-align:center; font-size:18px; font-weight:700; color:#D68910; margin-bottom:20px; animation:pop .4s ease; }
+.big-btn { display:block; width:100%; padding:15px; border:none; border-radius:14px; font-size:16px; font-weight:700; color:#fff; background:linear-gradient(135deg,var(--primary),var(--primary-light)); cursor:pointer; margin-bottom:10px; }
+.big-btn.secondary { background:#F1F2F6; color:var(--text); }
+
+/* Word Book */
+.filter-row { display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; -webkit-overflow-scrolling:touch; }
+.filter-chip { flex-shrink:0; padding:7px 14px; border-radius:16px; border:1.5px solid #DFE6E9; background:#fff; font-size:13px; cursor:pointer; }
+.filter-chip.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.wb-item { display:flex; align-items:center; justify-content:space-between; padding:13px 0; border-bottom:1px solid #F1F2F6; }
+.wb-word { font-weight:600; font-size:15px; }
+.wb-mean { font-size:13px; color:var(--text-light); margin-top:2px; }
+.wb-status { font-size:11px; padding:4px 10px; border-radius:10px; flex-shrink:0; }
+.wb-status.new { background:#F0EDFF; color:var(--primary); }
+.wb-status.learning { background:#FFF3CD; color:#D68910; }
+.wb-status.mastered { background:#D4EFDF; color:#27AE60; }
+.search-box { width:100%; padding:12px 16px; border:2px solid #F1F2F6; border-radius:14px; font-size:15px; outline:none; margin-bottom:12px; background:#fff; }
+.search-box:focus { border-color:var(--primary-light); }
+
+/* Pet */
+.pet-stage { text-align:center; padding:20px 0; position:relative; }
+.pet-emoji { font-size:80px; animation:float 3s ease-in-out infinite; display:inline-block; cursor:pointer; }
+.pet-emoji:active { animation:bounce .5s; }
+.pet-name { font-size:18px; font-weight:700; margin-top:8px; }
+.pet-level { font-size:13px; color:var(--text-light); }
+.pet-status-msg { font-size:14px; margin-top:8px; padding:8px 16px; background:#F8F9FE; border-radius:12px; display:inline-block; }
+.stat-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+.stat-label { font-size:13px; width:45px; flex-shrink:0; }
+.stat-bar { flex:1; height:10px; background:#F1F2F6; border-radius:5px; overflow:hidden; }
+.stat-fill { height:100%; border-radius:5px; transition:width .5s ease; }
+.stat-fill.hunger { background:linear-gradient(90deg,#FDCB6E,#E17055); }
+.stat-fill.mood { background:linear-gradient(90deg,#55EFC4,#00B894); }
+.stat-val { font-size:12px; color:var(--text-light); width:32px; text-align:right; }
+.pet-actions { display:flex; gap:10px; margin-top:16px; }
+.pet-action-btn { flex:1; padding:12px 8px; border:none; border-radius:14px; font-size:13px; font-weight:600; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.pet-action-btn .cost { font-size:11px; opacity:.8; }
+.pet-action-btn.feed { background:linear-gradient(135deg,#FFEAA7,#FDCB6E); color:#D68910; }
+.pet-action-btn.play { background:linear-gradient(135deg,#DFE6E9,#B2BEC3); color:#2D3436; }
+.pet-action-btn.gift { background:linear-gradient(135deg,#FD79A8,#E84393); color:#fff; }
+.pet-action-btn:disabled { opacity:.4; }
+
+/* Pet Shop */
+.shop-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.shop-item { background:#fff; border-radius:var(--radius); padding:18px 12px; text-align:center; box-shadow:var(--shadow); border:2px solid transparent; transition:all .2s; }
+.shop-item.owned { border-color:var(--success); }
+.shop-emoji { font-size:44px; margin-bottom:8px; }
+.shop-name { font-size:14px; font-weight:700; }
+.shop-price { font-size:12px; color:#D68910; margin-top:4px; }
+.shop-btn { margin-top:10px; padding:8px 20px; border:none; border-radius:12px; font-size:13px; font-weight:600; cursor:pointer; background:linear-gradient(135deg,var(--primary),var(--primary-light)); color:#fff; }
+.shop-btn:disabled { background:#DFE6E9; color:#B2BEC3; }
+.shop-btn.select { background:linear-gradient(135deg,#00B894,#55EFC4); }
+
+/* Grammar */
+.grammar-card { cursor:pointer; transition:transform .15s; }
+.grammar-card:active { transform:scale(0.98); }
+.grammar-title { font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; }
+.grammar-tag { font-size:11px; padding:3px 8px; border-radius:8px; background:#F0EDFF; color:var(--primary); }
+.grammar-body { display:none; margin-top:14px; padding-top:14px; border-top:1px solid #F1F2F6; font-size:14px; line-height:1.8; color:#2D3436; }
+.grammar-body.open { display:block; animation:fadeIn .3s; }
+.grammar-example { background:#F8F9FE; border-left:3px solid var(--primary); padding:10px 14px; border-radius:0 10px 10px 0; margin:8px 0; font-size:14px; }
+.grammar-example b { color:var(--primary); }
+
+/* Bottom Nav */
+.bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:480px; background:#fff; display:flex; padding:8px 0 calc(8px + env(safe-area-inset-bottom)); box-shadow:0 -2px 20px rgba(0,0,0,0.06); z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; color:#B2BEC3; cursor:pointer; padding:4px 0; border:none; background:none; position:relative; }
+.nav-item.active { color:var(--primary); font-weight:600; }
+.nav-icon { font-size:22px; }
+.nav-badge { position:absolute; top:0; right:50%; transform:translateX(14px); background:var(--danger); color:#fff; font-size:10px; min-width:16px; height:16px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:700; }
+
+/* Settings */
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:14px 0; border-bottom:1px solid #F1F2F6; }
+.setting-label { font-size:15px; }
+.stepper { display:flex; align-items:center; gap:12px; }
+.stepper button { width:30px; height:30px; border:none; border-radius:10px; background:#F0EDFF; color:var(--primary); font-size:18px; font-weight:700; cursor:pointer; }
+.stepper span { font-size:16px; font-weight:700; min-width:24px; text-align:center; }
+.danger-btn { width:100%; padding:14px; border:2px solid var(--danger); background:#fff; color:var(--danger); border-radius:14px; font-size:15px; font-weight:600; cursor:pointer; margin-top:20px; }
+
+/* Toast */
+.toast { position:fixed; top:60px; left:50%; transform:translateX(-50%); background:#2D3436; color:#fff; padding:10px 24px; border-radius:20px; font-size:14px; z-index:999; animation:pop .3s ease; display:none; }
+.toast.show { display:block; }
+.points-fly { position:fixed; z-index:998; font-size:18px; font-weight:800; color:#D68910; animation:confetti 1s ease forwards; pointer-events:none; }
+
+/* Setup */
+.setup-overlay { position:fixed; inset:0; background:linear-gradient(135deg,#6C5CE7,#A29BFE); z-index:200; display:flex; align-items:center; justify-content:center; padding:24px; }
+.setup-card { background:#fff; border-radius:24px; padding:32px 24px; width:100%; max-width:360px; text-align:center; animation:pop .4s ease; }
+.setup-card h2 { font-size:22px; margin-bottom:6px; }
+.setup-card p { font-size:14px; color:var(--text-light); margin-bottom:20px; }
+.setup-input { width:100%; padding:14px 18px; border:2px solid #F1F2F6; border-radius:14px; font-size:16px; text-align:center; outline:none; margin-bottom:16px; }
+.setup-input:focus { border-color:var(--primary-light); }
+.grade-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+.grade-opt { padding:12px; border:2px solid #F1F2F6; border-radius:14px; font-size:14px; font-weight:600; cursor:pointer; background:#fff; }
+.grade-opt.active { border-color:var(--primary); background:#F0EDFF; color:var(--primary); }
+.tab-row { display:flex; gap:8px; margin-bottom:14px; }
+.tab-btn { flex:1; padding:9px; border:none; border-radius:12px; font-size:13px; font-weight:600; background:#F1F2F6; color:var(--text-light); cursor:pointer; }
+.tab-btn.active { background:var(--primary); color:#fff; }
+</style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<!-- Setup -->
+<div id="setupOverlay" class="setup-overlay" style="display:none">
+  <div class="setup-card">
+    <h2>单词小宠物</h2>
+    <p>每天背几个单词，养一只可爱的小宠物吧！</p>
+    <input id="setupName" class="setup-input" placeholder="输入你的名字" maxlength="8">
+    <div class="grade-grid" id="gradeGrid"></div>
+    <button class="big-btn" onclick="finishSetup()">开始学习之旅</button>
+  </div>
+</div>
+
+<!-- Home -->
+<div id="page-home" class="page active">
+  <div class="header">
+    <h1>单词小宠物</h1>
+    <div class="points-badge">⭐ <span id="homePoints">0</span></div>
+  </div>
+  <div class="streak-bar">
+    <div><div class="streak-num" id="streakNum">0</div><div style="font-size:12px;opacity:.85">连续学习天数</div></div>
+    <div class="streak-dots" id="streakDots"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📋 今日任务</div>
+    <div id="todayPlan"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📊 学习进度</div>
+    <div style="font-size:13px;color:var(--text-light)" id="progressText"></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  </div>
+  <div class="card" style="text-align:center;cursor:pointer" onclick="switchPage('pet')">
+    <div id="homePetPreview" style="font-size:48px;animation:float 3s ease-in-out infinite"></div>
+    <div style="font-size:13px;color:var(--text-light);margin-top:6px" id="homePetMsg"></div>
+  </div>
+</div>
+
+<!-- Learn -->
+<div id="page-learn" class="page">
+  <div class="header"><h1>学习新词</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div id="learnArea"></div>
+</div>
+
+<!-- Review -->
+<div id="page-review" class="page">
+  <div class="header"><h1>复习巩固</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div id="reviewArea"></div>
+</div>
+
+<!-- Test -->
+<div id="page-test" class="page">
+  <div class="header"><h1>单词测试</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div id="testArea"></div>
+</div>
+
+<!-- Word Book -->
+<div id="page-book" class="page">
+  <div class="header"><h1>单词本</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <input class="search-box" id="bookSearch" placeholder="搜索单词或中文..." oninput="renderBook()">
+  <div class="filter-row" id="bookFilters"></div>
+  <div class="card" id="bookList"></div>
+</div>
+
+<!-- Grammar -->
+<div id="page-grammar" class="page">
+  <div class="header"><h1>语法知识</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div class="tab-row" id="grammarTabs"></div>
+  <div id="grammarList"></div>
+</div>
+
+<!-- Pet -->
+<div id="page-pet" class="page">
+  <div class="header"><h1>我的宠物</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div class="tab-row">
+    <button class="tab-btn active" onclick="showPetTab('main',this)">我的宠物</button>
+    <button class="tab-btn" onclick="showPetTab('shop',this)">宠物商店</button>
+  </div>
+  <div id="petMain"></div>
+  <div id="petShop" style="display:none"></div>
+</div>
+
+<!-- Settings -->
+<div id="page-settings" class="page">
+  <div class="header"><h1>设置</h1><div class="points-badge">⭐ <span class="pts-display">0</span></div></div>
+  <div class="card">
+    <div class="setting-row"><span class="setting-label">每天新词数量</span><div class="stepper"><button onclick="adjDaily(-1)">-</button><span id="dailyCount">5</span><button onclick="adjDaily(1)">+</button></div></div>
+    <div class="setting-row"><span class="setting-label">当前年级</span><div class="stepper"><button onclick="adjGrade(-1)">-</button><span id="gradeDisplay">六年级</span><button onclick="adjGrade(1)">+</button></div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📈 学习统计</div>
+    <div id="statsArea" style="font-size:14px;line-height:2;color:var(--text-light)"></div>
+  </div>
+  <button class="danger-btn" onclick="resetAll()">重置所有数据</button>
+</div>
+
+<!-- Bottom Nav -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="switchPage('home')"><span class="nav-icon">🏠</span>首页</button>
+  <button class="nav-item" onclick="switchPage('learn')"><span class="nav-icon">📖</span>学习</button>
+  <button class="nav-item" onclick="switchPage('review')" id="navReview"><span class="nav-icon">🔄</span>复习<span class="nav-badge" id="reviewBadge" style="display:none">0</span></button>
+  <button class="nav-item" onclick="switchPage('test')"><span class="nav-icon">✏️</span>测试</button>
+  <button class="nav-item" onclick="switchPage('pet')"><span class="nav-icon">🐾</span>宠物</button>
+  <button class="nav-item" onclick="switchPage('book')"><span class="nav-icon">📚</span>词本</button>
+  <button class="nav-item" onclick="switchPage('grammar')"><span class="nav-icon">💡</span>语法</button>
+  <button class="nav-item" onclick="switchPage('settings')"><span class="nav-icon">⚙️</span>设置</button>
+</nav>
+
+<script>
+// ==================== 词库数据 ====================
+// 基于北京版小学英语教材(三至六年级)课标词汇整理
+const WORDS = {
+g3: [
+// 问候与介绍
+["hello","你好"],["hi","嗨"],["goodbye","再见"],["bye","再见"],["name","名字"],["boy","男孩"],["girl","女孩"],["teacher","老师"],["friend","朋友"],["morning","早晨"],["afternoon","下午"],["nice","令人愉快的"],["meet","遇见"],["how","怎样"],["are","是"],["you","你"],["I","我"],["am","是"],["is","是"],["my","我的"],["your","你的"],["thank","谢谢"],["please","请"],["sorry","对不起"],["yes","是"],["no","不"],
+// 数字
+["one","一"],["two","二"],["three","三"],["four","四"],["five","五"],["six","六"],["seven","七"],["eight","八"],["nine","九"],["ten","十"],
+// 颜色
+["red","红色"],["blue","蓝色"],["yellow","黄色"],["green","绿色"],["black","黑色"],["white","白色"],["orange","橙色"],["purple","紫色"],["pink","粉色"],["brown","棕色"],
+// 动物
+["cat","猫"],["dog","狗"],["fish","鱼"],["bird","鸟"],["duck","鸭子"],["pig","猪"],["bear","熊"],["monkey","猴子"],["panda","熊猫"],["rabbit","兔子"],["elephant","大象"],["tiger","老虎"],
+// 家庭
+["father","父亲"],["mother","母亲"],["brother","兄弟"],["sister","姐妹"],["grandpa","爷爷/外公"],["grandma","奶奶/外婆"],["family","家庭"],["uncle","叔叔"],["aunt","阿姨"],["parent","父(母)亲"],
+// 身体
+["eye","眼睛"],["ear","耳朵"],["nose","鼻子"],["mouth","嘴"],["face","脸"],["hand","手"],["head","头"],["arm","胳膊"],["leg","腿"],["foot","脚"],
+// 食物饮料
+["apple","苹果"],["banana","香蕉"],["cake","蛋糕"],["bread","面包"],["egg","鸡蛋"],["milk","牛奶"],["water","水"],["juice","果汁"],["rice","米饭"],["noodles","面条"],["chicken","鸡肉"],["tea","茶"],["candy","糖果"],["ice cream","冰淇淋"],["hamburger","汉堡包"],["food","食物"],["sweet","甜的"],["potato","土豆"],
+// 学习用品
+["book","书"],["pen","钢笔"],["pencil","铅笔"],["ruler","尺子"],["bag","书包"],["desk","课桌"],["chair","椅子"],["eraser","橡皮"],["crayon","蜡笔"],["pencil case","铅笔盒"],
+// 玩具与物品
+["ball","球"],["doll","娃娃"],["kite","风筝"],["car","小汽车"],["box","盒子"],["toy","玩具"],["balloon","气球"],
+// 形容词
+["big","大的"],["small","小的"],["long","长的"],["short","短的"],["tall","高的"],["happy","快乐的"],["sad","伤心的"],["good","好的"],["new","新的"],["old","旧的/老的"],["hot","热的"],["cold","冷的"],["cool","酷的"],["cute","可爱的"],
+// 动词
+["run","跑"],["jump","跳"],["swim","游泳"],["sing","唱歌"],["dance","跳舞"],["draw","画画"],["read","读"],["write","写"],["play","玩/打(球)"],["eat","吃"],["drink","喝"],["sleep","睡觉"],["walk","走路"],["fly","飞"],["like","喜欢"],["have","有"],["look","看"],["listen","听"],["say","说"],["go","去"],["come","来"],["open","打开"],["close","关闭"],["sit","坐"],["stand","站"],
+// 日常与时间
+["day","天"],["today","今天"],["school","学校"],["home","家"],["room","房间"],["door","门"],["window","窗户"],["sun","太阳"],["moon","月亮"],["star","星星"]
+],
+g4: [
+// 学校生活
+["classroom","教室"],["library","图书馆"],["playground","操场"],["gym","体育馆"],["computer","电脑"],["lesson","课"],["subject","科目"],["English","英语"],["Chinese","语文"],["math","数学"],["music","音乐"],["art","美术"],["PE","体育"],["homework","作业"],["exam","考试"],["student","学生"],
+// 日常活动
+["get up","起床"],["brush teeth","刷牙"],["wash face","洗脸"],["have breakfast","吃早餐"],["go to school","上学"],["go home","回家"],["do homework","做作业"],["go to bed","睡觉"],["watch TV","看电视"],["clean","打扫"],["cook","做饭"],["help","帮助"],["housework","家务"],
+// 星期与时间
+["Monday","星期一"],["Tuesday","星期二"],["Wednesday","星期三"],["Thursday","星期四"],["Friday","星期五"],["Saturday","星期六"],["Sunday","星期天"],["week","周"],["weekend","周末"],["time","时间"],["o'clock","...点钟"],["half","一半"],["past","过(几点)"],["quarter","一刻钟"],["early","早的"],["late","迟的"],
+// 天气季节
+["weather","天气"],["sunny","晴朗的"],["rainy","下雨的"],["cloudy","多云的"],["windy","有风的"],["snowy","下雪的"],["spring","春天"],["summer","夏天"],["autumn","秋天"],["winter","冬天"],["season","季节"],["warm","温暖的"],["rain","雨"],["snow","雪"],["wind","风"],
+// 衣物
+["shirt","衬衫"],["T-shirt","T恤衫"],["skirt","短裙"],["dress","连衣裙"],["pants","裤子"],["shoes","鞋子"],["hat","帽子"],["coat","外套"],["jacket","夹克"],["sweater","毛衣"],["socks","袜子"],["gloves","手套"],["scarf","围巾"],["wear","穿"],
+// 职业
+["doctor","医生"],["nurse","护士"],["driver","司机"],["farmer","农民"],["worker","工人"],["police","警察"],["postman","邮递员"],["pilot","飞行员"],["vet","兽医"],["job","工作"],
+// 地点与方位
+["park","公园"],["zoo","动物园"],["hospital","医院"],["shop","商店"],["supermarket","超市"],["cinema","电影院"],["museum","博物馆"],["station","车站"],["street","街道"],["where","哪里"],["near","在...附近"],["beside","在...旁边"],["behind","在...后面"],["between","在...之间"],["front","前面"],["left","左边"],["right","右边"],
+// 交通
+["bus","公共汽车"],["bike","自行车"],["train","火车"],["plane","飞机"],["ship","轮船"],["taxi","出租车"],["subway","地铁"],["ride","骑"],["drive","驾驶"],["on foot","步行"],
+// 感受与状态
+["tired","累的"],["hungry","饿的"],["thirsty","渴的"],["angry","生气的"],["afraid","害怕的"],["excited","兴奋的"],["bored","无聊的"],["sick","生病的"],["well","健康的"],["worry","担心"],
+// 常用动词
+["buy","买"],["make","制作"],["take","拿/带"],["give","给"],["find","找到"],["lose","丢失"],["fix","修理"],["carry","搬"],["put","放"],["turn","转"],["stop","停止"],["wait","等待"],["try","尝试"],["use","使用"],["need","需要"],["want","想要"],["can","能"],["will","将要"],
+// 其他名词
+["key","钥匙"],["phone","电话"],["picture","照片"],["map","地图"],["story","故事"],["question","问题"],["answer","答案"],["idea","主意"],["way","路/方式"],["country","国家"],["city","城市"],["world","世界"],["people","人们"],["man","男人"],["woman","女人"],["child","孩子"],["flower","花"],["tree","树"],["grass","草"],["river","河流"],["mountain","山"],["lake","湖"],["sea","大海"]
+],
+g5: [
+// 旅行出行
+["travel","旅行"],["trip","旅行"],["visit","参观"],["tourist","游客"],["ticket","票"],["hotel","旅馆"],["luggage","行李"],["camera","相机"],["vacation","假期"],["holiday","假日"],["beach","海滩"],["island","岛"],["bridge","桥"],["tower","塔"],["palace","宫殿"],
+// 自然世界
+["forest","森林"],["animal","动物"],["plant","植物"],["insect","昆虫"],["sky","天空"],["cloud","云"],["land","陆地"],["earth","地球"],["stone","石头"],["sand","沙子"],["field","田野"],["farm","农场"],["garden","花园"],["village","村庄"],
+// 感受性格
+["feel","感觉"],["kind","善良的"],["brave","勇敢的"],["clever","聪明的"],["friendly","友好的"],["quiet","安静的"],["noisy","吵闹的"],["shy","害羞的"],["funny","有趣的"],["lazy","懒惰的"],["hard-working","勤奋的"],["honest","诚实的"],["proud","骄傲的"],["nervous","紧张的"],["surprised","惊讶的"],
+// 比较级
+["bigger","更大的"],["smaller","更小的"],["longer","更长的"],["shorter","更短的"],["taller","更高的"],["older","更老的"],["younger","更年轻的"],["faster","更快的"],["slower","更慢的"],["better","更好的"],["worse","更差的"],["more","更多"],["most","最"],["than","比"],
+// 过去式
+["was","是(am/is过去式)"],["were","是(are过去式)"],["went","去(过去式)"],["came","来(过去式)"],["saw","看见(过去式)"],["ate","吃(过去式)"],["drank","喝(过去式)"],["bought","买(过去式)"],["took","拿(过去式)"],["made","做(过去式)"],["got","得到(过去式)"],["had","有(过去式)"],["did","做(过去式)"],["played","玩(过去式)"],["visited","参观(过去式)"],["yesterday","昨天"],["last","上一个的"],["ago","以前"],
+// 频率副词
+["always","总是"],["usually","通常"],["often","经常"],["sometimes","有时"],["never","从不"],["every day","每天"],
+// 规则与标志
+["rule","规则"],["sign","标志"],["must","必须"],["should","应该"],["shouldn't","不应该"],["mustn't","禁止"],["keep","保持"],["follow","遵守"],["dangerous","危险的"],["safe","安全的"],["safety","安全"],["careful","小心的"],
+// 科技生活
+["Internet","互联网"],["email","电子邮件"],["message","消息"],["robot","机器人"],["science","科学"],["space","太空"],["rocket","火箭"],["satellite","卫星"],["invent","发明"],["machine","机器"],
+// 常用动词
+["learn","学习"],["study","学习"],["teach","教"],["know","知道"],["understand","理解"],["remember","记住"],["forget","忘记"],["think","想/认为"],["hope","希望"],["wish","祝愿"],["enjoy","享受"],["finish","完成"],["start","开始"],["begin","开始"],["happen","发生"],["believe","相信"],["decide","决定"],["practice","练习"],["improve","提高"],["share","分享"],
+// 其他名词
+["dream","梦想"],["future","未来"],["plan","计划"],["news","新闻"],["newspaper","报纸"],["magazine","杂志"],["diary","日记"],["letter","信"],["word","单词"],["sentence","句子"],["language","语言"],["culture","文化"],["festival","节日"],["gift","礼物"],["party","聚会"],["match","比赛"],["team","队伍"],["winner","获胜者"],["prize","奖品"],["chance","机会"],["problem","问题"],["mistake","错误"]
+],
+g6: [
+// 环境环保
+["environment","环境"],["protect","保护"],["pollution","污染"],["recycle","回收利用"],["save","节约/拯救"],["energy","能源"],["waste","浪费"],["rubbish","垃圾"],["litter","乱扔垃圾"],["reduce","减少"],["reuse","重复使用"],["nature","自然"],["wild","野生的"],["extinct","灭绝的"],
+// 健康运动
+["health","健康"],["healthy","健康的"],["exercise","锻炼"],["sport","运动"],["football","足球"],["basketball","篮球"],["ping-pong","乒乓球"],["swimming","游泳"],["running","跑步"],["skating","滑冰"],["skiing","滑雪"],["medicine","药"],["pill","药丸"],["fever","发烧"],["headache","头疼"],["toothache","牙疼"],["rest","休息"],["diet","饮食"],
+// 未来梦想
+["goal","目标"],["scientist","科学家"],["astronaut","宇航员"],["artist","艺术家"],["writer","作家"],["singer","歌手"],["dancer","舞蹈家"],["player","运动员"],["inventor","发明家"],["engineer","工程师"],["grow up","长大"],["want to be","想成为"],
+// 情感品质
+["love","爱"],["care","关心"],["respect","尊重"],["trust","信任"],["encourage","鼓励"],["praise","表扬"],["success","成功"],["fail","失败"],["effort","努力"],["confidence","信心"],["patient","耐心的"],["responsible","负责任的"],["independent","独立的"],["creative","有创造力的"],
+// 社会生活
+["society","社会"],["community","社区"],["neighbour","邻居"],["volunteer","志愿者"],["charity","慈善"],["public","公共的"],["government","政府"],["law","法律"],["peace","和平"],["war","战争"],["history","历史"],["hero","英雄"],["famous","著名的"],["great","伟大的"],
+// 常用动词
+["discover","发现"],["explore","探索"],["create","创造"],["develop","发展"],["change","改变"],["provide","提供"],["support","支持"],["prevent","阻止"],["solve","解决"],["achieve","实现"],["prepare","准备"],["organize","组织"],["celebrate","庆祝"],["invite","邀请"],["promise","承诺"],["suggest","建议"],["explain","解释"],["describe","描述"],["compare","比较"],["express","表达"],
+// 形容词副词
+["important","重要的"],["necessary","必要的"],["possible","可能的"],["impossible","不可能的"],["different","不同的"],["similar","相似的"],["special","特别的"],["popular","受欢迎的"],["wonderful","精彩的"],["amazing","令人惊奇的"],["terrible","糟糕的"],["serious","严重的"],["deep","深的"],["wide","宽的"],["heavy","重的"],["light","轻的"],["bright","明亮的"],["dark","黑暗的"],["loud","大声的"],["soft","柔软的"],["smooth","光滑的"],["rough","粗糙的"],["quickly","快速地"],["slowly","慢慢地"],["carefully","仔细地"],["happily","快乐地"],["suddenly","突然地"],["finally","最后"],["already","已经"],["still","仍然"],["even","甚至"],["almost","几乎"],
+// 连接与介词
+["because","因为"],["although","虽然"],["however","然而"],["therefore","因此"],["instead","代替"],["unless","除非"],["whether","是否"],["since","自从"],["until","直到"],["during","在...期间"],["across","穿过"],["through","通过"],["against","反对/靠着"],["toward","朝向"],["beyond","超越"],["except","除了"]
+]
+};
+
+// 短语库
+const PHRASES = {
+g3: [["good morning","早上好"],["good night","晚安"],["how are you","你好吗"],["thank you","谢谢你"],["you're welcome","不客气"],["stand up","起立"],["sit down","坐下"],["come in","进来"],["go out","出去"],["look at","看"],["listen to","听"],["let's go","我们走吧"],["well done","做得好"],["of course","当然"],["me too","我也是"]],
+g4: [["get up","起床"],["go to school","上学"],["go home","回家"],["go to bed","去睡觉"],["do homework","做作业"],["watch TV","看电视"],["brush teeth","刷牙"],["wash face","洗脸"],["have breakfast","吃早餐"],["have lunch","吃午餐"],["have dinner","吃晚餐"],["play football","踢足球"],["play basketball","打篮球"],["ride a bike","骑自行车"],["take a bus","坐公交"],["on foot","步行"],["next to","紧挨着"],["far away","遥远"],["turn left","左转"],["turn right","右转"],["go straight","直走"],["how much","多少钱"],["how many","多少"],["a lot of","许多"]],
+g5: [["last week","上周"],["last year","去年"],["the day before yesterday","前天"],["more than","超过"],["less than","少于"],["as...as","和...一样"],["good at","擅长"],["interested in","对...感兴趣"],["look forward to","期待"],["take part in","参加"],["give up","放弃"],["find out","查明"],["think about","考虑"],["talk about","谈论"],["learn from","向...学习"],["be proud of","为...骄傲"],["make friends","交朋友"],["have fun","玩得开心"],["for example","例如"],["in fact","事实上"]],
+g6: [["grow up","长大"],["want to be","想成为"],["take care of","照顾"],["look after","照料"],["protect the environment","保护环境"],["save energy","节约能源"],["throw away","扔掉"],["pick up","捡起"],["plant trees","种树"],["make a plan","制定计划"],["work hard","努力学习"],["come true","实现"],["give advice","提建议"],["make progress","取得进步"],["pay attention to","注意"],["be good for","对...有益"],["be bad for","对...有害"],["instead of","而不是"],["no matter","无论"],["each other","互相"]]
+};
+
+// 语法知识
+const GRAMMAR = [
+{g:3,tag:"句型",title:"be动词用法 (am/is/are)",body:"<b>I</b> 用 am，<b>you</b> 用 are，<b>he/she/it</b> 用 is，复数全用 are。<div class='grammar-example'>I <b>am</b> a student. 我是一名学生。<br>She <b>is</b> my teacher. 她是我的老师。<br>They <b>are</b> my friends. 他们是我的朋友。</div>口诀：我用am，你用are，is连着他她它，复数全部都用are。"},
+{g:3,tag:"句型",title:"打招呼与自我介绍",body:"见面打招呼用 Hello!/Hi! 询问名字用 <b>What's your name?</b><div class='grammar-example'><b>What's your name?</b> 你叫什么名字？<br><b>My name is Sam.</b> 我叫Sam。<br><b>Nice to meet you!</b> 很高兴见到你！<br><b>How are you?</b> — <b>I'm fine, thank you.</b></div>"},
+{g:3,tag:"句型",title:"询问物品 What's this/that?",body:"<b>What's this?</b> 这是什么？（近处）<br><b>What's that?</b> 那是什么？（远处）<div class='grammar-example'>What's this? — <b>It's a book.</b> 这是一本书。<br>What's that? — <b>It's a bird.</b> 那是一只鸟。</div>注意：回答都用 It's...，不用 This is/That is。"},
+{g:3,tag:"句型",title:"表达喜好 I like...",body:"喜欢用 <b>like</b>，后面可以加名词或动词ing。<div class='grammar-example'>I <b>like</b> apples. 我喜欢苹果。<br>I <b>like swimming</b>. 我喜欢游泳。<br>I <b>don't like</b> bananas. 我不喜欢香蕉。<br><b>Do you like</b> music? — Yes, I do. / No, I don't.</div>"},
+{g:3,tag:"句型",title:"祈使句（表示命令请求）",body:"祈使句以动词原形开头，表示\"请做...\"或\"不要做...\"。<div class='grammar-example'><b>Stand up</b>, please. 请起立。<br><b>Open</b> your book. 打开你的书。<br><b>Don't run</b> in the classroom. 不要在教室里跑。<br><b>Let's</b> play football. 我们去踢足球吧。</div>"},
+{g:4,tag:"时态",title:"一般现在时",body:"表示经常做的事或客观事实。主语是<b>第三人称单数</b>（he/she/it）时，动词要加s/es。<div class='grammar-example'>I <b>go</b> to school at 7:30. 我7:30上学。<br>He <b>goes</b> to school by bus. 他坐公交上学。<br>She <b>likes</b> English. 她喜欢英语。<br>The sun <b>rises</b> in the east. 太阳从东方升起。</div>变否定：don't / doesn't + 动词原形<br>变疑问：Do/Does + 主语 + 动词原形？"},
+{g:4,tag:"时态",title:"现在进行时 (be + doing)",body:"表示<b>正在</b>做的事。结构：am/is/are + 动词ing。<div class='grammar-example'>I <b>am reading</b> a book. 我正在读书。<br>They <b>are playing</b> football. 他们正在踢足球。<br>She <b>is singing</b> a song. 她正在唱歌。</div>标志词：now, look!, listen!, at the moment<br>动词变ing规则：直接加ing；去e加ing（make→making）；双写加ing（run→running, swim→swimming）"},
+{g:4,tag:"句型",title:"There be 句型",body:"表示\"某地有某物\"。<b>There is</b> + 单数/不可数名词，<b>There are</b> + 复数名词。<div class='grammar-example'><b>There is</b> a park near my home. 我家附近有个公园。<br><b>There are</b> many birds in the tree. 树上有很多鸟。<br><b>Is there</b> a library in your school? 你们学校有图书馆吗？<br><b>How many</b> books are there? 有多少本书？</div>就近原则：There is a pen and two books.（pen最近用is）"},
+{g:4,tag:"句型",title:"询问价格与数量",body:"<b>How much</b> 问价格（不可数）；<b>How many</b> 问数量（可数复数）。<div class='grammar-example'><b>How much</b> is this shirt? — It's 50 yuan.<br><b>How many</b> people are there in your family? — There are four.</div>"},
+{g:4,tag:"句型",title:"询问方位与问路",body:"<b>Where is...?</b> 在哪里？用介词回答方位。<div class='grammar-example'><b>Where is</b> the hospital? 医院在哪？<br>It's <b>next to</b> the park. 在公园旁边。<br><b>Excuse me</b>, how can I get to the station? 请问怎么去车站？<br><b>Go straight</b> and <b>turn left</b>. 直走然后左转。</div>方位词：in, on, under, behind, near, beside, between, in front of"},
+{g:5,tag:"时态",title:"一般过去时",body:"表示<b>过去</b>发生的事。动词用过去式。<div class='grammar-example'>I <b>went</b> to the zoo yesterday. 我昨天去了动物园。<br>She <b>bought</b> a new dress last week. 她上周买了条新裙子。<br>We <b>had</b> a good time. 我们玩得很开心。</div>规则变化：加ed（played, visited）；e结尾加d（liked, lived）；辅+y变i加ed（studied）；重读闭音节双写加ed（stopped）<br>常见不规则：go→went, see→saw, eat→ate, buy→bought, take→took, make→made, get→got, have→had, do→did, come→came<br>标志词：yesterday, last..., ...ago, just now"},
+{g:5,tag:"时态",title:"一般将来时 (be going to / will)",body:"表示<b>将要</b>发生的事。<div class='grammar-example'>I <b>am going to visit</b> my grandma tomorrow. 我明天要去看望奶奶。<br>It <b>will</b> rain tomorrow. 明天会下雨。<br>We <b>are going to have</b> a picnic. 我们要去野餐。</div>标志词：tomorrow, next..., soon, this weekend<br>疑问句：Are you going to...? / Will you...?<br>回答：Yes, I am. / No, I won't."},
+{g:5,tag:"语法",title:"形容词比较级和最高级",body:"两者比较用<b>比较级 + than</b>；三者以上用<b>the + 最高级</b>。<div class='grammar-example'>Tom is <b>taller than</b> Jerry. 汤姆比杰瑞高。<br>This book is <b>more interesting than</b> that one. 这本书比那本有趣。<br>She is <b>the best</b> student in our class. 她是班里最好的学生。</div>变化规则：短词加er/est（tall→taller→tallest）；e结尾加r/st（nice→nicer）；辅+y变i加er/est（happy→happier）；多音节用more/most（beautiful→more beautiful）<br>特殊：good→better→best, bad→worse→worst, many/much→more→most"},
+{g:5,tag:"语法",title:"情态动词 must / should / can",body:"情态动词后面加<b>动词原形</b>。<div class='grammar-example'>You <b>must stop</b> at the red light. 红灯必须停。<br>You <b>shouldn't play</b> on the street. 不应该在街上玩。<br><b>Can</b> you swim? — Yes, I <b>can</b>. / No, I <b>can't</b>.<br>We <b>must keep</b> quiet in the library. 图书馆里必须保持安静。</div>must=必须（强制）should=应该（建议）can=能够（能力/许可）"},
+{g:5,tag:"句型",title:"频率副词的位置",body:"always, usually, often, sometimes, never 放在<b>be动词后、实义动词前</b>。<div class='grammar-example'>He <b>is always</b> late. 他总是迟到。（be后）<br>I <b>usually get up</b> at 6:30. 我通常6:30起床。（实义动词前）<br>She <b>never eats</b> junk food. 她从不吃垃圾食品。</div>频率排序：always(100%) > usually(80%) > often(60%) > sometimes(40%) > never(0%)"},
+{g:6,tag:"时态",title:"现在完成时 (have/has + done)",body:"表示过去发生但对现在有影响的事，或从过去持续到现在的状态。<div class='grammar-example'>I <b>have read</b> this book twice. 这本书我读过两遍。<br>She <b>has lived</b> here for ten years. 她在这里住了十年。<br><b>Have</b> you <b>ever been</b> to Beijing? 你去过北京吗？<br>I <b>have just finished</b> my homework. 我刚做完作业。</div>标志词：already, yet, just, ever, never, for+时间段, since+时间点<br>注意：have been to(去过已回) vs have gone to(去了未回)"},
+{g:6,tag:"语法",title:"被动语态 (be + done)",body:"当主语是动作的<b>承受者</b>时用被动语态。结构：be + 过去分词。<div class='grammar-example'>English <b>is spoken</b> all over the world. 全世界都说英语。<br>The bridge <b>was built</b> in 1990. 这座桥建于1990年。<br>Trees <b>must be planted</b> every year. 每年都必须种树。</div>主动变被动：宾语变主语 + be(根据时态变化) + 过去分词 + by + 原主语"},
+{g:6,tag:"语法",title:"条件状语从句 (if)",body:"if 引导条件句，<b>主将从现</b>：主句用将来时，if从句用一般现在时。<div class='grammar-example'><b>If</b> it rains tomorrow, we <b>will stay</b> at home. 如果明天下雨，我们就待在家。<br>I <b>will help</b> you <b>if</b> you need me. 如果你需要我，我会帮你。<br><b>If</b> you study hard, you <b>will pass</b> the exam. 如果努力学习，你会通过考试。</div>注意：if从句中不用will！"},
+{g:6,tag:"语法",title:"宾语从句",body:"一个句子作宾语。注意<b>语序用陈述句</b>，时态要呼应。<div class='grammar-example'>I think <b>(that) he is right</b>. 我认为他是对的。<br>Do you know <b>where he lives</b>? 你知道他住哪吗？<br>She asked me <b>if I was OK</b>. 她问我是否还好。<br>Can you tell me <b>how I can get there</b>? 你能告诉我怎么去那吗？</div>三要素：引导词(that/if/whether/疑问词) + 陈述语序 + 时态呼应"},
+{g:6,tag:"语法",title:"不定式与动名词 (to do / doing)",body:"有些动词后接 <b>to do</b>，有些接 <b>doing</b>。<div class='grammar-example'>want/decide/hope/plan + <b>to do</b>：<br>I want <b>to be</b> a scientist. 我想当科学家。<br>enjoy/finish/practice + <b>doing</b>：<br>I enjoy <b>reading</b>. 我喜欢阅读。<br>stop <b>to do</b>(停下来去做) vs stop <b>doing</b>(停止正在做的)</div>常考：like doing(习惯爱好) / like to do(某次想做)"},
+{g:6,tag:"句型",title:"感叹句 (What/How)",body:"<b>What</b> + (a/an) + 形容词 + 名词！<b>How</b> + 形容词/副词！<div class='grammar-example'><b>What a</b> beautiful flower! 多美的花啊！<br><b>What</b> good news! 多好的消息啊！(不可数不加a)<br><b>How</b> fast he runs! 他跑得多快啊！<br><b>How</b> time flies! 时间过得真快！</div>技巧：看中心词——名词用What，形容词/副词用How。"}
+];
+
+// 宠物商店
+const PET_SHOP = [
+{id:"cat",emoji:"🐱",name:"小猫咪",price:0,desc:"温顺可爱的小猫"},
+{id:"dog",emoji:"🐶",name:"小狗狗",price:0,desc:"忠诚活泼的小狗"},
+{id:"rabbit",emoji:"🐰",name:"小兔子",price:50,desc:"软萌软萌的兔子"},
+{id:"panda",emoji:"🐼",name:"小熊猫",price:100,desc:"国宝级萌物"},
+{id:"fox",emoji:"🦊",name:"小狐狸",price:150,desc:"聪明伶俐的狐狸"},
+{id:"owl",emoji:"🦉",name:"猫头鹰",price:200,desc:"智慧的象征"},
+{id:"unicorn",emoji:"🦄",name:"独角兽",price:300,desc:"梦幻神奇的生物"},
+{id:"dragon",emoji:"🐲",name:"小神龙",price:500,desc:"传说中的神兽"}
+];
+
+// ==================== 记忆曲线 ====================
+const INTERVALS = [0, 1, 2, 4, 7, 15, 30]; // 各等级复习间隔(天)
+
+// ==================== 状态管理 ====================
+let S = loadState();
+
+function defaultState(){
+  return {
+    name:"", grade:6, dailyNew:5, points:0, totalPoints:0,
+    streak:0, lastStudyDate:null, studyDays:[],
+    words:{}, // wordKey -> {lv, next, learned, correct, wrong}
+    pets:{ owned:["cat"], active:"cat", hunger:80, mood:80, level:1, exp:0, lastFed:null },
+    settings:{ sound:true },
+    created: todayStr()
+  };
+}
+function loadState(){
+  try{ const d=localStorage.getItem("wordpet_v1"); if(d) return JSON.parse(d); }catch(e){}
+  return defaultState();
+}
+function saveState(){ localStorage.setItem("wordpet_v1", JSON.stringify(S)); }
+function todayStr(){ const d=new Date(); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+function dateOffset(days){ const d=new Date(); d.setDate(d.getDate()+days); return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0"); }
+
+// ==================== 词库工具 ====================
+function allWordsForGrade(g){
+  const grades = g<=4 ? [3,4] : g<=5 ? [3,4,5] : [3,4,5,6];
+  let list=[];
+  grades.forEach(gg=>{
+    (WORDS["g"+gg]||[]).forEach((w,i)=> list.push({key:"g"+gg+"_w"+i, en:w[0], cn:w[1], grade:gg, type:"word"}));
+    (PHRASES["g"+gg]||[]).forEach((p,i)=> list.push({key:"g"+gg+"_p"+i, en:p[0], cn:p[1], grade:gg, type:"phrase"}));
+  });
+  return list;
+}
+function wordStatus(key){
+  const w=S.words[key];
+  if(!w) return "new";
+  if(w.lv>=INTERVALS.length-1) return "mastered";
+  return "learning";
+}
+function getNewWords(count){
+  const all=allWordsForGrade(S.grade);
+  return all.filter(w=>!S.words[w.key]).slice(0,count);
+}
+function getReviewWords(){
+  const today=todayStr();
+  const all=allWordsForGrade(S.grade);
+  return all.filter(w=>{ const s=S.words[w.key]; return s && s.lv<INTERVALS.length-1 && s.next<=today; });
+}
+function markStudied(){
+  const today=todayStr();
+  if(S.lastStudyDate!==today){
+    const yesterday=dateOffset(-1);
+    S.streak = (S.lastStudyDate===yesterday) ? S.streak+1 : 1;
+    S.lastStudyDate=today;
+    if(!S.studyDays.includes(today)){ S.studyDays.push(today); if(S.studyDays.length>60) S.studyDays.shift(); }
+  }
+}
+function addPoints(n){
+  S.points+=n; S.totalPoints+=n;
+  showPointsFly("+"+n);
+  updatePointsDisplay();
+}
+function recordAnswer(key, correct){
+  if(!S.words[key]) S.words[key]={lv:0,next:todayStr(),learned:todayStr(),correct:0,wrong:0};
+  const w=S.words[key];
+  if(correct){ w.correct++; w.lv=Math.min(w.lv+1, INTERVALS.length-1); w.next=dateOffset(INTERVALS[w.lv]); }
+  else { w.wrong++; w.lv=Math.max(0,w.lv-1); w.next=dateOffset(1); }
+}
+
+// ==================== 宠物逻辑 ====================
+function petDecay(){
+  const p=S.pets; if(!p.owned.length) return;
+  const today=todayStr();
+  if(p.lastFed && p.lastFed!==today){
+    const days=(new Date(today)-new Date(p.lastFed))/86400000;
+    p.hunger=Math.max(0, p.hunger-days*15);
+    p.mood=Math.max(0, p.mood-days*12);
+  }
+  if(!p.lastFed) p.lastFed=today;
+}
+function feedPet(cost){
+  if(S.points<cost){ showToast("积分不够哦，快去背单词吧！"); return; }
+  S.points-=cost;
+  S.pets.hunger=Math.min(100,S.pets.hunger+25);
+  S.pets.exp+=10;
+  checkPetLevel();
+  saveState(); updatePointsDisplay(); renderPet();
+  showToast("宠物吃得很开心！+10经验");
+}
+function playWithPet(){
+  S.pets.mood=Math.min(100,S.pets.mood+15);
+  S.pets.exp+=5;
+  checkPetLevel();
+  saveState(); renderPet();
+  showToast("和宠物玩耍，心情+15！");
+}
+function giftPet(){
+  if(S.points<20){ showToast("需要20积分买礼物哦！"); return; }
+  S.points-=20;
+  S.pets.mood=Math.min(100,S.pets.mood+30);
+  S.pets.hunger=Math.min(100,S.pets.hunger+10);
+  S.pets.exp+=20;
+  checkPetLevel();
+  saveState(); updatePointsDisplay(); renderPet();
+  showToast("宠物收到礼物，超级开心！+20经验");
+}
+function checkPetLevel(){
+  const p=S.pets;
+  const need=p.level*50;
+  if(p.exp>=need){ p.exp-=need; p.level++; showToast("恭喜！宠物升到了"+p.level+"级！"); }
+}
+function petStudyReward(){
+  S.pets.hunger=Math.min(100,S.pets.hunger+8);
+  S.pets.mood=Math.min(100,S.pets.mood+5);
+  S.pets.exp+=8;
+  S.pets.lastFed=todayStr();
+  checkPetLevel();
+}
+function petStatusMsg(){
+  const p=S.pets;
+  if(p.hunger<20) return "好饿呀...快喂我吃东西吧 🥺";
+  if(p.mood<20) return "好无聊...陪我玩一会儿嘛 😢";
+  if(p.hunger<50) return "肚子有点饿了~";
+  if(p.mood<50) return "想和你一起玩~";
+  return "今天也要一起加油背单词哦！💪";
+}
+function petEmoji(){
+  const p=S.pets;
+  const base=PET_SHOP.find(x=>x.id===p.active);
+  if(!base) return "🐱";
+  if(p.hunger<15||p.mood<15) return "😿";
+  return base.emoji;
+}
+
+// ==================== UI 工具 ====================
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.textContent=msg; t.classList.add("show");
+  clearTimeout(t._timer);
+  t._timer=setTimeout(()=>t.classList.remove("show"),2000);
+}
+function showPointsFly(text){
+  const el=document.createElement("div");
+  el.className="points-fly"; el.textContent=text+"⭐";
+  el.style.left=(Math.random()*60+20)+"%"; el.style.top="40%";
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(),1000);
+}
+function updatePointsDisplay(){
+  document.getElementById("homePoints").textContent=S.points;
+  document.querySelectorAll(".pts-display").forEach(e=>e.textContent=S.points);
+}
+function switchPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("page-"+name).classList.add("active");
+  document.querySelectorAll(".nav-item").forEach((n,i)=>{
+    const pages=["home","learn","review","test","pet","book","grammar","settings"];
+    n.classList.toggle("active", pages[i]===name);
+  });
+  if(name==="home") renderHome();
+  if(name==="learn") renderLearn();
+  if(name==="review") renderReview();
+  if(name==="test") renderTest();
+  if(name==="book") renderBook();
+  if(name==="grammar") renderGrammar();
+  if(name==="pet") renderPet();
+  if(name==="settings") renderSettings();
+  window.scrollTo(0,0);
+}
+
+// ==================== 首页 ====================
+function renderHome(){
+  updatePointsDisplay();
+  document.getElementById("streakNum").textContent=S.streak;
+  const dots=document.getElementById("streakDots");
+  dots.innerHTML="";
+  for(let i=6;i>=0;i--){
+    const d=document.createElement("div");
+    d.className="streak-dot"+(S.studyDays.includes(dateOffset(-i))?" on":"");
+    dots.appendChild(d);
+  }
+  const newWords=getNewWords(S.dailyNew);
+  const reviewWords=getReviewWords();
+  const plan=document.getElementById("todayPlan");
+  plan.innerHTML="";
+  // 新词任务
+  plan.innerHTML+=`<div class="plan-item">
+    <div class="plan-info"><div class="plan-icon" style="background:#F0EDFF">📖</div>
+    <div><div style="font-weight:600;font-size:14px">学习新词</div><div style="font-size:12px;color:var(--text-light)">${newWords.length>0?newWords.length+"个新词等你":"今日新词已完成"}</div></div></div>
+    <button class="plan-btn ${newWords.length?"learn":"done"}" onclick="switchPage('learn')">${newWords.length?"去学习":"已完成"}</button></div>`;
+  plan.innerHTML+=`<div class="plan-item">
+    <div class="plan-info"><div class="plan-icon" style="background:#E8FFF8">🔄</div>
+    <div><div style="font-weight:600;font-size:14px">复习旧词</div><div style="font-size:12px;color:var(--text-light)">${reviewWords.length>0?reviewWords.length+"个词需要复习":"暂无复习任务"}</div></div></div>
+    <button class="plan-btn ${reviewWords.length?"review":"done"}" onclick="switchPage('review')">${reviewWords.length?"去复习":"已完成"}</button></div>`;
+  plan.innerHTML+=`<div class="plan-item">
+    <div class="plan-info"><div class="plan-icon" style="background:#FFF3CD">✏️</div>
+    <div><div style="font-weight:600;font-size:14px">单词测试</div><div style="font-size:12px;color:var(--text-light)">检验学习成果赚积分</div></div></div>
+    <button class="plan-btn learn" onclick="switchPage('test')">去测试</button></div>`;
+  // 进度
+  const all=allWordsForGrade(S.grade);
+  const learned=all.filter(w=>S.words[w.key]).length;
+  const mastered=all.filter(w=>wordStatus(w.key)==="mastered").length;
+  document.getElementById("progressText").textContent=`已学 ${learned}/${all.length} 词 · 已掌握 ${mastered} 词`;
+  document.getElementById("progressFill").style.width=(learned/all.length*100)+"%";
+  // 宠物预览
+  petDecay();
+  document.getElementById("homePetPreview").textContent=petEmoji();
+  document.getElementById("homePetMsg").textContent=S.pets.owned.length?petStatusMsg():"去宠物商店领养一只宠物吧！";
+  // 复习角标
+  const badge=document.getElementById("reviewBadge");
+  if(reviewWords.length){ badge.style.display="flex"; badge.textContent=reviewWords.length; }
+  else badge.style.display="none";
+}
+
+// ==================== 学习 ====================
+let learnQueue=[], learnIdx=0, learnRevealed=false;
+function renderLearn(){
+  learnQueue=getNewWords(S.dailyNew);
+  learnIdx=0;
+  if(!learnQueue.length){
+    document.getElementById("learnArea").innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px">🎉</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px">今日新词已全部学完！</div>
+      <div style="font-size:14px;color:var(--text-light);margin-bottom:20px">可以在设置中增加每天的新词数量</div>
+      <button class="big-btn" onclick="switchPage('review')">去复习巩固</button>
+      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+    return;
+  }
+  showLearnCard();
+}
+function showLearnCard(){
+  if(learnIdx>=learnQueue.length){
+    document.getElementById("learnArea").innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px;animation:bounce 1s infinite">🌟</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px">太棒了！${learnQueue.length}个新词学习完成！</div>
+      <div class="result-points">获得 ${learnQueue.length*2} 积分</div>
+      <button class="big-btn" onclick="switchPage('review')">趁热打铁去复习</button>
+      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+    return;
+  }
+  const w=learnQueue[learnIdx];
+  learnRevealed=false;
+  document.getElementById("learnArea").innerHTML=`<div class="card word-card">
+    <span class="word-topic">${w.type==="phrase"?"短语":"单词"} · ${w.grade}年级</span>
+    <span class="word-counter">${learnIdx+1}/${learnQueue.length}</span>
+    <div class="word-en">${w.en}</div>
+    <div class="word-cn hidden-word" id="learnCn">${w.cn}</div>
+    <div class="word-actions" id="learnActions">
+      <button class="btn-show" onclick="revealLearn()">显示释义</button>
+    </div></div>
+    <div class="progress-track" style="margin-top:12px"><div class="progress-fill" style="width:${learnIdx/learnQueue.length*100}%"></div></div>`;
+}
+function revealLearn(){
+  if(learnRevealed) return;
+  learnRevealed=true;
+  document.getElementById("learnCn").classList.remove("hidden-word");
+  document.getElementById("learnActions").innerHTML=`
+    <button class="btn-know no" onclick="learnAnswer(false)">不认识</button>
+    <button class="btn-know yes" onclick="learnAnswer(true)">认识</button>`;
+}
+function learnAnswer(known){
+  const w=learnQueue[learnIdx];
+  if(!S.words[w.key]) S.words[w.key]={lv:0,next:dateOffset(1),learned:todayStr(),correct:0,wrong:0};
+  if(known){ S.words[w.key].correct++; S.words[w.key].lv=1; S.words[w.key].next=dateOffset(INTERVALS[1]); addPoints(2); }
+  else { S.words[w.key].wrong++; S.words[w.key].next=dateOffset(1); addPoints(1); }
+  markStudied(); petStudyReward(); saveState();
+  learnIdx++; showLearnCard();
+}
+
+// ==================== 复习(选择题) ====================
+let reviewQueue=[], reviewIdx=0, reviewCorrect=0;
+function renderReview(){
+  reviewQueue=shuffle(getReviewWords()).slice(0,20);
+  reviewIdx=0; reviewCorrect=0;
+  if(!reviewQueue.length){
+    document.getElementById("reviewArea").innerHTML=`<div class="card" style="text-align:center;padding:40px 20px">
+      <div style="font-size:56px;margin-bottom:16px">✅</div>
+      <div style="font-size:17px;font-weight:700;margin-bottom:8px">暂时没有需要复习的单词</div>
+      <div style="font-size:14px;color:var(--text-light);margin-bottom:20px">学完新词后，明天它们就会出现在复习列表里</div>
+      <button class="big-btn" onclick="switchPage('learn')">去学习新词</button>
+      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+    return;
+  }
+  showReviewCard();
+}
+function showReviewCard(){
+  if(reviewIdx>=reviewQueue.length){
+    const pts=reviewCorrect*3;
+    document.getElementById("reviewArea").innerHTML=`<div class="card" style="text-align:center;padding:30px 20px">
+      <div class="result-circle" style="background:linear-gradient(135deg,#00B894,#55EFC4)">${Math.round(reviewCorrect/reviewQueue.length*100)}%</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">复习完成！答对 ${reviewCorrect}/${reviewQueue.length}</div>
+      <div class="result-points">获得 ${pts} 积分</div>
+      <button class="big-btn" onclick="switchPage('test')">去测试赚更多积分</button>
+      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+    return;
+  }
+  const w=reviewQueue[reviewIdx];
+  const all=allWordsForGrade(S.grade);
+  let options=[w];
+  while(options.length<4){
+    const r=all[Math.floor(Math.random()*all.length)];
+    if(!options.find(o=>o.key===r.key)) options.push(r);
+  }
+  options=shuffle(options);
+  const dir=Math.random()>0.5; // true: en->cn
+  document.getElementById("reviewArea").innerHTML=`
+    <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">复习 ${reviewIdx+1}/${reviewQueue.length}</div>
+    <div class="card">
+      <div class="quiz-type-tag">${dir?"选出正确的中文意思":"选出正确的英文单词"}</div>
+      <div class="quiz-prompt">${dir?w.en:w.cn}</div>
+      <div id="reviewOptions">${options.map(o=>`<button class="quiz-option" onclick="reviewAnswer(this,'${o.key}','${w.key}',${dir})">${dir?o.cn:o.en}</button>`).join("")}</div>
+    </div>
+    <div class="progress-track"><div class="progress-fill" style="width:${reviewIdx/reviewQueue.length*100}%"></div></div>`;
+}
+function reviewAnswer(btn, chosen, correct, dir){
+  const opts=document.querySelectorAll("#reviewOptions .quiz-option");
+  opts.forEach(o=>o.classList.add("disabled"));
+  const isCorrect=chosen===correct;
+  if(isCorrect){ btn.classList.add("correct"); reviewCorrect++; addPoints(3); }
+  else{
+    btn.classList.add("wrong");
+    opts.forEach(o=>{ if(o.textContent===(dir?allWordsForGrade(S.grade).find(w=>w.key===correct).cn:allWordsForGrade(S.grade).find(w=>w.key===correct).en)) o.classList.add("correct"); });
+  }
+  recordAnswer(correct, isCorrect);
+  markStudied(); petStudyReward(); saveState();
+  setTimeout(()=>{ reviewIdx++; showReviewCard(); }, isCorrect?600:1200);
+}
+
+// ==================== 测试 ====================
+let testQuestions=[], testIdx=0, testCorrect=0, testMode="choice";
+function renderTest(){
+  const all=allWordsForGrade(S.grade);
+  const learned=all.filter(w=>S.words[w.key]);
+  document.getElementById("testArea").innerHTML=`<div class="card" style="text-align:center;padding:30px 20px">
+    <div style="font-size:48px;margin-bottom:16px">✏️</div>
+    <div style="font-size:16px;font-weight:700;margin-bottom:6px">选择测试模式</div>
+    <div style="font-size:13px;color:var(--text-light);margin-bottom:20px">已学 ${learned.length} 词可用于测试</div>
+    <button class="big-btn" onclick="startTest('choice')" ${learned.length<4?"disabled style='opacity:.4'":""}>选择题（4选1）</button>
+    <button class="big-btn" style="background:linear-gradient(135deg,#00B894,#55EFC4)" onclick="startTest('spell')" ${learned.length<1?"disabled style='opacity:.4'":""}>拼写题（看中文写英文）</button>
+    <div style="font-size:12px;color:var(--text-light);margin-top:14px">每次10题 · 答对越多积分越多</div></div>`;
+}
+function startTest(mode){
+  const all=allWordsForGrade(S.grade);
+  const learned=all.filter(w=>S.words[w.key]);
+  if(mode==="choice"&&learned.length<4){ showToast("至少学习4个单词才能测试"); return; }
+  if(!learned.length){ showToast("先学几个单词再来测试吧"); return; }
+  testMode=mode;
+  testQuestions=shuffle(learned).slice(0,10);
+  testIdx=0; testCorrect=0;
+  showTestCard();
+}
+function showTestCard(){
+  if(testIdx>=testQuestions.length){
+    const rate=testCorrect/testQuestions.length;
+    const pts=Math.round(testCorrect*5*(1+rate*0.5));
+    if(rate>=0.8) addPoints(pts);
+    else if(rate>=0.6) addPoints(Math.round(pts*0.6));
+    else addPoints(Math.round(pts*0.3));
+    const emoji=rate>=0.9?"🏆":rate>=0.7?"🌟":rate>=0.5?"💪":"📖";
+    const msg=rate>=0.9?"太厉害了，你是单词大王！":rate>=0.7?"很棒，继续保持！":rate>=0.5?"不错，再加油！":"没关系，多复习几遍就会了！";
+    document.getElementById("testArea").innerHTML=`<div class="card" style="text-align:center;padding:30px 20px">
+      <div style="font-size:56px;margin-bottom:12px">${emoji}</div>
+      <div class="result-circle" style="background:linear-gradient(135deg,${rate>=0.6?"#6C5CE7,#A29BFE":"#E17055,#FAB1A0"})">${Math.round(rate*100)}%</div>
+      <div style="font-size:16px;font-weight:700;margin-bottom:6px">答对 ${testCorrect}/${testQuestions.length}</div>
+      <div style="font-size:14px;color:var(--text-light);margin-bottom:8px">${msg}</div>
+      <div class="result-points">测试积分已发放</div>
+      <button class="big-btn" onclick="startTest('${testMode}')">再测一次</button>
+      <button class="big-btn secondary" onclick="switchPage('home')">返回首页</button></div>`;
+    markStudied(); saveState();
+    return;
+  }
+  const w=testQuestions[testIdx];
+  if(testMode==="choice"){
+    const all=allWordsForGrade(S.grade);
+    let options=[w];
+    while(options.length<4){ const r=all[Math.floor(Math.random()*all.length)]; if(!options.find(o=>o.key===r.key)) options.push(r); }
+    options=shuffle(options);
+    const dir=Math.random()>0.4;
+    document.getElementById("testArea").innerHTML=`
+      <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">第 ${testIdx+1}/${testQuestions.length} 题</div>
+      <div class="card"><div class="quiz-type-tag">${dir?"选出正确的中文意思":"选出正确的英文"}</div>
+      <div class="quiz-prompt">${dir?w.en:w.cn}</div>
+      <div id="testOptions">${options.map(o=>`<button class="quiz-option" onclick="testAnswer(this,'${o.key}','${w.key}',${dir})">${dir?o.cn:o.en}</button>`).join("")}</div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${testIdx/testQuestions.length*100}%"></div></div>`;
+  } else {
+    document.getElementById("testArea").innerHTML=`
+      <div style="text-align:center;font-size:13px;color:var(--text-light);margin-bottom:8px">第 ${testIdx+1}/${testQuestions.length} 题</div>
+      <div class="card" style="text-align:center">
+        <div class="quiz-type-tag">根据中文拼写英文</div>
+        <div class="quiz-prompt" style="font-size:24px">${w.cn}</div>
+        <div class="spell-hint">提示：${w.en.length}个字母，首字母 <b style="color:var(--primary)">${w.en[0]}</b></div>
+        <input class="spell-input" id="spellInput" autocomplete="off" autocapitalize="none" placeholder="输入英文..." onkeydown="if(event.key==='Enter')checkSpell('${w.key}')">
+        <button class="spell-check-btn" onclick="checkSpell('${w.key}')">确认</button>
+        <div id="spellFeedback" style="margin-top:12px;font-size:14px"></div></div>
+      <div class="progress-track"><div class="progress-fill" style="width:${testIdx/testQuestions.length*100}%"></div></div>`;
+    setTimeout(()=>document.getElementById("spellInput")&&document.getElementById("spellInput").focus(),100);
+  }
+}
+function testAnswer(btn, chosen, correctKey, dir){
+  const opts=document.querySelectorAll("#testOptions .quiz-option");
+  opts.forEach(o=>o.classList.add("disabled"));
+  const isCorrect=chosen===correctKey;
+  if(isCorrect){ btn.classList.add("correct"); testCorrect++; }
+  else{
+    btn.classList.add("wrong");
+    const all=allWordsForGrade(S.grade);
+    const cw=all.find(x=>x.key===correctKey);
+    opts.forEach(o=>{ if(o.textContent===(dir?cw.cn:cw.en)) o.classList.add("correct"); });
+  }
+  recordAnswer(correctKey, isCorrect); saveState();
+  setTimeout(()=>{ testIdx++; showTestCard(); }, isCorrect?500:1200);
+}
+function checkSpell(key){
+  const input=document.getElementById("spellInput");
+  const all=allWordsForGrade(S.grade);
+  const w=all.find(x=>x.key===key);
+  const val=input.value.trim().toLowerCase();
+  const ans=w.en.toLowerCase();
+  const fb=document.getElementById("spellFeedback");
+  if(!val) return;
+  if(val===ans){
+    input.classList.add("correct"); testCorrect++;
+    fb.innerHTML=`<span style="color:var(--success);font-weight:700">✓ 正确！</span>`;
+    recordAnswer(key,true);
+  } else {
+    input.classList.add("wrong");
+    fb.innerHTML=`<span style="color:var(--danger)">✗ 正确答案：<b>${w.en}</b></span>`;
+    recordAnswer(key,false);
+  }
+  input.disabled=true;
+  document.querySelector(".spell-check-btn").disabled=true;
+  saveState();
+  setTimeout(()=>{ testIdx++; showTestCard(); }, 1500);
+}
+
+// ==================== 单词本 ====================
+let bookFilter="all";
+function renderBook(){
+  const all=allWordsForGrade(S.grade);
+  const grades=[...new Set(all.map(w=>w.grade))];
+  const filters=document.getElementById("bookFilters");
+  filters.innerHTML=`<button class="filter-chip ${bookFilter==="all"?"active":""}" onclick="bookFilter='all';renderBook()">全部</button>
+    <button class="filter-chip ${bookFilter==="mastered"?"active":""}" onclick="bookFilter='mastered';renderBook()">已掌握</button>
+    <button class="filter-chip ${bookFilter==="learning"?"active":""}" onclick="bookFilter='learning';renderBook()">学习中</button>
+    <button class="filter-chip ${bookFilter==="new"?"active":""}" onclick="bookFilter='new';renderBook()">未学习</button>`+
+    grades.map(g=>`<button class="filter-chip ${bookFilter==="g"+g?"active":""}" onclick="bookFilter='g${g}';renderBook()">${g}年级</button>`).join("");
+  const q=(document.getElementById("bookSearch").value||"").toLowerCase();
+  let list=all.filter(w=>{
+    if(q && !w.en.toLowerCase().includes(q) && !w.cn.includes(q)) return false;
+    if(bookFilter==="all") return true;
+    if(bookFilter==="mastered"||bookFilter==="learning"||bookFilter==="new") return wordStatus(w.key)===bookFilter;
+    if(bookFilter.startsWith("g")) return w.grade===parseInt(bookFilter.slice(1));
+    return true;
+  });
+  const container=document.getElementById("bookList");
+  if(!list.length){ container.innerHTML=`<div style="text-align:center;padding:30px;color:var(--text-light)">没有匹配的单词</div>`; return; }
+  container.innerHTML=list.slice(0,100).map(w=>{
+    const st=wordStatus(w.key);
+    const stLabel=st==="new"?"未学":st==="learning"?"学习中":"已掌握";
+    return `<div class="wb-item"><div><div class="wb-word">${w.en} ${w.type==="phrase"?"<span style='font-size:11px;color:var(--primary)'>短语</span>":""}</div><div class="wb-mean">${w.cn}</div></div><span class="wb-status ${st}">${stLabel}</span></div>`;
+  }).join("")+(list.length>100?`<div style="text-align:center;padding:12px;font-size:12px;color:var(--text-light)">还有 ${list.length-100} 个，请搜索缩小范围</div>`:"");
+}
+
+// ==================== 语法 ====================
+let grammarFilter=3;
+function renderGrammar(){
+  const tabs=document.getElementById("grammarTabs");
+  tabs.innerHTML=[3,4,5,6].map(g=>`<button class="tab-btn ${grammarFilter===g?"active":""}" onclick="grammarFilter=${g};renderGrammar()">${g}年级</button>`).join("");
+  const list=GRAMMAR.filter(g=>g.g===grammarFilter);
+  document.getElementById("grammarList").innerHTML=list.map((g,i)=>`
+    <div class="card grammar-card" onclick="toggleGrammar(this)">
+      <div class="grammar-title"><span class="grammar-tag">${g.tag}</span>${g.title}</div>
+      <div class="grammar-body">${g.body}</div></div>`).join("")||`<div class="card" style="text-align:center;color:var(--text-light)">该年级语法知识整理中...</div>`;
+}
+function toggleGrammar(el){
+  const body=el.querySelector(".grammar-body");
+  body.classList.toggle("open");
+}
+
+// ==================== 宠物页 ====================
+function showPetTab(tab, btn){
+  document.querySelectorAll("#page-pet .tab-btn").forEach(b=>b.classList.remove("active"));
+  btn.classList.add("active");
+  document.getElementById("petMain").style.display=tab==="main"?"block":"none";
+  document.getElementById("petShop").style.display=tab==="shop"?"block":"none";
+  renderPet();
+}
+function renderPet(){
+  petDecay();
+  const p=S.pets;
+  const main=document.getElementById("petMain");
+  if(!p.owned.length){
+    main.innerHTML=`<div class="card" style="text-align:center;padding:40px 20px"><div style="font-size:48px;margin-bottom:12px">🥚</div><div style="font-weight:700;margin-bottom:8px">你还没有宠物</div><div style="font-size:14px;color:var(--text-light)">去商店领养一只吧！</div></div>`;
+  } else {
+    const info=PET_SHOP.find(x=>x.id===p.active);
+    const need=p.level*50;
+    main.innerHTML=`<div class="card"><div class="pet-stage">
+      <div class="pet-emoji" onclick="petTouch()">${petEmoji()}</div>
+      <div class="pet-name">${info?info.name:"宠物"}</div>
+      <div class="pet-level">Lv.${p.level} · 经验 ${p.exp}/${need}</div>
+      <div class="pet-status-msg">${petStatusMsg()}</div></div>
+      <div class="stat-row"><span class="stat-label">饱食</span><div class="stat-bar"><div class="stat-fill hunger" style="width:${p.hunger}%"></div></div><span class="stat-val">${Math.round(p.hunger)}</span></div>
+      <div class="stat-row"><span class="stat-label">心情</span><div class="stat-bar"><div class="stat-fill mood" style="width:${p.mood}%"></div></div><span class="stat-val">${Math.round(p.mood)}</span></div>
+      <div class="stat-row"><span class="stat-label">经验</span><div class="stat-bar"><div class="stat-fill" style="width:${p.exp/need*100}%;background:linear-gradient(90deg,#6C5CE7,#A29BFE)"></div></div><span class="stat-val">${Math.round(p.exp/need*100)}%</span></div>
+      <div class="pet-actions">
+        <button class="pet-action-btn feed" onclick="feedPet(10)" ${S.points<10?"disabled":""}>🍎 喂食<span class="cost">10积分 · 饱食+25</span></button>
+        <button class="pet-action-btn play" onclick="playWithPet()">🎾 玩耍<span class="cost">免费 · 心情+15</span></button>
+        <button class="pet-action-btn gift" onclick="giftPet()" ${S.points<20?"disabled":""}>🎁 礼物<span class="cost">20积分 · 心情+30</span></button>
+      </div>
+      <div style="margin-top:14px;font-size:12px;color:var(--text-light);text-align:center">每天背单词和复习都会自动喂养宠物哦~</div></div>`;
+    if(p.owned.length>1){
+      main.innerHTML+=`<div class="card"><div class="card-title">切换宠物</div><div style="display:flex;gap:12px;flex-wrap:wrap">`+
+        p.owned.map(id=>{ const it=PET_SHOP.find(x=>x.id===id); return `<div style="text-align:center;cursor:pointer;padding:8px 14px;border-radius:12px;border:2px solid ${p.active===id?"var(--primary)":"#F1F2F6"}" onclick="S.pets.active='${id}';saveState();renderPet()"><div style="font-size:32px">${it.emoji}</div><div style="font-size:12px">${it.name}</div></div>`; }).join("")+`</div></div>`;
+    }
+  }
+  // 商店
+  const shop=document.getElementById("petShop");
+  shop.innerHTML=`<div class="shop-grid">`+PET_SHOP.map(it=>{
+    const owned=p.owned.includes(it.id);
+    const canBuy=S.points>=it.price;
+    return `<div class="shop-item ${owned?"owned":""}">
+      <div class="shop-emoji">${it.emoji}</div>
+      <div class="shop-name">${it.name}</div>
+      <div style="font-size:11px;color:var(--text-light)">${it.desc}</div>
+      <div class="shop-price">${it.price===0?"免费领养":"⭐ "+it.price+" 积分"}</div>
+      ${owned?`<button class="shop-btn select" onclick="S.pets.active='${it.id}';saveState();renderPet();showToast('已切换到${it.name}')">${p.active===it.id?"当前":"选择"}</button>`
+      :`<button class="shop-btn" onclick="buyPet('${it.id}')" ${canBuy?"":"disabled"}>${canBuy?"领养":"积分不足"}</button>`}</div>`;
+  }).join("")+`</div>`;
+}
+function buyPet(id){
+  const it=PET_SHOP.find(x=>x.id===id);
+  if(S.points<it.price){ showToast("积分不够哦！"); return; }
+  S.points-=it.price;
+  S.pets.owned.push(id);
+  S.pets.active=id;
+  S.pets.hunger=80; S.pets.mood=80;
+  saveState(); updatePointsDisplay(); renderPet();
+  showToast(`恭喜领养了${it.name}！好好照顾它吧~`);
+}
+function petTouch(){
+  S.pets.mood=Math.min(100,S.pets.mood+2);
+  saveState(); renderPet();
+  showToast(["摸摸头~","宠物蹭了蹭你的手","它看起来很开心！","咕噜咕噜~"][Math.floor(Math.random()*4)]);
+}
+
+// ==================== 设置 ====================
+function renderSettings(){
+  document.getElementById("dailyCount").textContent=S.dailyNew;
+  document.getElementById("gradeDisplay").textContent=["三","四","五","六"][S.grade-3]+"年级";
+  const all=allWordsForGrade(S.grade);
+  const learned=all.filter(w=>S.words[w.key]).length;
+  const mastered=all.filter(w=>wordStatus(w.key)==="mastered").length;
+  let totalCorrect=0,totalWrong=0;
+  Object.values(S.words).forEach(w=>{totalCorrect+=w.correct;totalWrong+=w.wrong;});
+  document.getElementById("statsArea").innerHTML=`
+    累计学习：${S.studyDays.length} 天<br>
+    已学单词：${learned} / ${all.length}<br>
+    已掌握：${mastered} 个<br>
+    累计答题：${totalCorrect+totalWrong} 次（正确率 ${totalCorrect+totalWrong?Math.round(totalCorrect/(totalCorrect+totalWrong)*100):0}%）<br>
+    累计获得积分：${S.totalPoints}<br>
+    连续学习：${S.streak} 天`;
+}
+function adjDaily(d){ S.dailyNew=Math.max(3,Math.min(20,S.dailyNew+d)); saveState(); renderSettings(); }
+function adjGrade(d){ S.grade=Math.max(3,Math.min(6,S.grade+d)); saveState(); renderSettings(); showToast("已切换到"+["三","四","五","六"][S.grade-3]+"年级词库"); }
+function resetAll(){
+  if(confirm("确定要重置所有学习数据吗？此操作不可恢复！")){
+    localStorage.removeItem("wordpet_v1");
+    S=defaultState();
+    showSetup();
+  }
+}
+
+// ==================== 初始化 ====================
+function showSetup(){
+  document.getElementById("setupOverlay").style.display="flex";
+  const grid=document.getElementById("gradeGrid");
+  grid.innerHTML=[3,4,5,6].map(g=>`<div class="grade-opt ${g===6?"active":""}" onclick="selectGrade(this,${g})">${g}年级</div>`).join("");
+}
+let setupGrade=6;
+function selectGrade(el,g){
+  document.querySelectorAll(".grade-opt").forEach(e=>e.classList.remove("active"));
+  el.classList.add("active");
+  setupGrade=g;
+}
+function finishSetup(){
+  const name=document.getElementById("setupName").value.trim()||"小朋友";
+  S.name=name; S.grade=setupGrade;
+  saveState();
+  document.getElementById("setupOverlay").style.display="none";
+  showToast(`欢迎，${name}！开始今天的学习吧~`);
+  renderHome();
+}
+function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; }
+
+// Boot
+petDecay();
+if(!S.name){ showSetup(); } else { document.getElementById("setupOverlay").style.display="none"; }
+renderHome();
+</script>
+</body>
+</html>
